@@ -43,7 +43,7 @@ f(n) = 440 × 2^((n − 69) / 12)
 ```
 src/
 ├── audio/
-│   └── playNotes.ts            # playNote, playInterval, playChord (待接入)
+│   └── playNotes.ts            # playNote, playInterval(双声部), playChord
 ├── theory/
 │   ├── notes.ts                # MIDI↔音名↔频率 工具函数
 │   ├── intervals.ts            # 全量 12 种音程
@@ -128,7 +128,7 @@ export interface GameSession {
 
 ```ts
 export async function playNote(note: string, duration = 0.6): Promise<void>
-export async function playInterval(note1: string, note2: string): Promise<void>  // 两音间隔 700ms
+export async function playInterval(note1: string, note2: string): Promise<void>  // 双声部: 两音同时发声
 export async function playChord(notes: string[]): Promise<void>                    // 多音同时发声
 ```
 
@@ -160,7 +160,7 @@ export async function playChord(notes: string[]): Promise<void>                 
 ## 三个 Trainer Hook
 
 - `usePitchTrainer(mode)` — 音名: 半音 C3–C6，选项池 12 音名，`playQuestion` = `playNote`
-- `useIntervalTrainer(mode)` — 音程: 全量 12 种，随机根音（音域 C3–C6 内）与上/下行，`playQuestion` = `playInterval`
+- `useIntervalTrainer(mode)` — 音程: 全量 12 种，随机根音（音域 C3–C6 内）与上/下行（双声部同时发声），`playQuestion` = `playInterval`
 - `useChordTrainer(mode)` — 和弦: 全量 8 种，随机根音，`playQuestion` = `playChord`
 
 ## 组件规格

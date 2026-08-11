@@ -18,5 +18,5 @@ export function buildOptions(correct: string, pool: readonly string[], count: nu
 
 export function joinNotes(notes: string[]): string {
   if (notes.length <= 1) return notes.join('')
-  return notes.join(notes.length === 2 ? ' → ' : ' + ')
+  return notes.join(' + ')
 }
