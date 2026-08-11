@@ -23,10 +23,10 @@ export default function QuizLayout({ session, prompt }: QuizLayoutProps) {
       {question && (
         <>
           <p className="text-center text-sm text-slate-400">{prompt}</p>
-          <PlayArea notes={question.notes} onReplay={session.replay} />
+          <PlayArea isPlaying={session.isPlaying} onPlay={session.replay} />
           <OptionsGrid
             options={question.options}
-            disabled={!!lastResult}
+            disabled={!!lastResult || session.isPlaying}
             selectedAnswer={lastResult?.chosen ?? null}
             correctAnswer={lastResult ? question.correctAnswer : null}
             onSelect={session.submitAnswer}

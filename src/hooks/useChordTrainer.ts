@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+import { playChord } from '../audio/playNotes'
 import { midiToNote, randomChromaticMidi } from '../theory/notes'
 import { CHORDS } from '../theory/chords'
 import { buildOptions, pickRandom } from './quizUtils'
@@ -18,5 +20,8 @@ export function createChordQuestion(): QuizQuestion {
 }
 
 export function useChordTrainer(mode: GameMode) {
-  return useGameSession(createChordQuestion, mode)
+  const playQuestion = useCallback(async (q: QuizQuestion) => {
+    await playChord(q.notes)
+  }, [])
+  return useGameSession(createChordQuestion, mode, playQuestion)
 }

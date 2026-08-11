@@ -44,6 +44,7 @@ export interface GameSession {
   lastResult: QuizResult | null
   stats: QuizStats
   timeRemaining: number | null
+  isPlaying: boolean
   submitAnswer: (answer: string) => void
   stop: () => void
   restart: () => void

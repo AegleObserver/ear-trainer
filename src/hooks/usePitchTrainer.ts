@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+import { playNote } from '../audio/playNotes'
 import { midiToNote, NOTE_NAMES, randomChromaticMidi } from '../theory/notes'
 import { buildOptions } from './quizUtils'
 import { useGameSession } from './useGameSession'
@@ -15,5 +17,8 @@ export function createPitchQuestion(): QuizQuestion {
 }
 
 export function usePitchTrainer(mode: GameMode) {
-  return useGameSession(createPitchQuestion, mode)
+  const playQuestion = useCallback(async (q: QuizQuestion) => {
+    await playNote(q.notes[0])
+  }, [])
+  return useGameSession(createPitchQuestion, mode, playQuestion)
 }

@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { setVolume } from '../audio/engine'
 import type { PageDef, PageId } from '../types'
 import EarTrainingPage from '../pages/EarTrainingPage'
 import PlayPage from '../pages/PlayPage'
@@ -16,7 +17,17 @@ interface AppShellProps {
 }
 
 export default function AppShell({ activePage, onNavigate }: AppShellProps) {
-  const [volume, setVolume] = useState(0.8)
+  const [volume, setVolumeState] = useState(0.8)
+
+  useEffect(() => {
+    setVolume(0.8)
+  }, [])
+
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value)
+    setVolumeState(v)
+    setVolume(v)
+  }, [])
 
   const handleNavigate = useCallback(
     (page: PageDef) => {
@@ -49,7 +60,7 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
               max="1"
               step="0.05"
               value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
+              onChange={handleVolumeChange}
               className="h-1 w-24 accent-cyan-400"
             />
           </label>

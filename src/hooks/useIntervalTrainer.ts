@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+import { playInterval } from '../audio/playNotes'
 import { midiToNote, randomChromaticMidi } from '../theory/notes'
 import { INTERVALS } from '../theory/intervals'
 import { buildOptions, pickRandom } from './quizUtils'
@@ -21,5 +23,8 @@ export function createIntervalQuestion(): QuizQuestion {
 }
 
 export function useIntervalTrainer(mode: GameMode) {
-  return useGameSession(createIntervalQuestion, mode)
+  const playQuestion = useCallback(async (q: QuizQuestion) => {
+    await playInterval(q.notes[0], q.notes[1])
+  }, [])
+  return useGameSession(createIntervalQuestion, mode, playQuestion)
 }

@@ -96,10 +96,11 @@ export interface GameSession {
   lastResult: QuizResult | null
   stats: QuizStats
   timeRemaining: number | null   // 仅限时模式
+  isPlaying: boolean             // 题目播放中
   submitAnswer: (answer: string) => void
   stop: () => void               // 无限模式停止
   restart: () => void            // 再来一局
-  replay: () => void             // 重播 (音频待接入)
+  replay: () => void             // 重播当前题目
 }
 ```
 
@@ -121,48 +122,46 @@ export interface GameSession {
 
 全量 8 种和弦：大三/小三/增三/减三/属七/大七/小七/减七（`CHORDS: ChordDef[]`）。
 
-## 音频层 (src/audio/playNotes.ts)
+## 音频层 (src/audio/playNotes.ts) — ✅ 已实现
 
 基于 `engine.ts` 的 `getSynth()`：
 
 ```ts
-export async function playNote(note: string, duration = '1n') {
-  await ensureAudio()
-  getSynth().triggerAttackRelease(note, duration)
-}
-
-export async function playInterval(note1: string, note2: string) {
-  await ensureAudio()
-  const synth = getSynth()
-  synth.triggerAttackRelease(note1, '4n')
-  await new Promise((r) => setTimeout(r, 800))
-  synth.triggerAttackRelease(note2, '4n')
-}
-
-export async function playChord(notes: string[]) {
-  await ensureAudio()
-  getSynth().triggerAttackRelease(notes, '2n')
-}
+export async function playNote(note: string, duration = 0.6): Promise<void>
+export async function playInterval(note1: string, note2: string): Promise<void>  // 两音间隔 700ms
+export async function playChord(notes: string[]): Promise<void>                    // 多音同时发声
 ```
+
+- `ensureAudio()` 通过 `Promise.race` 设 1.5s 超时，非手势环境调用不会挂起
+- 每次答题点击时调用 `ensureAudio()`（手势解锁 AudioContext），之后自动播放可正常发声
+- `setVolume(level)` 设置全局音量（`Tone.getDestination().volume`），Header 音量滑块已接入
+- 音高换算由 Tone.js 内部按十二平均律完成（A4=440Hz）
+
+## 播放流程
+
+- 新题生成后自动播放：切题（答题后 1.5s）与"再来一局"时调用 `play(question)`
+- `replay()` 重播当前题（用户手势，首次点击同时解锁音频）
+- `isPlaying` 期间禁用选项按钮，防止未听完就作答
 
 ## 会话引擎 (hooks/useGameSession.ts)
 
-- 初始化即出第一题并处于 `playing`
+签名: `useGameSession(createQuestion, mode, playQuestion)`，`playQuestion` 由各 trainer hook 提供。
+
+- 初始化即出第一题并处于 `playing`（不出声，需点击"播放题目"解锁音频）
 - `submitAnswer(answer)`:
-  - 判题 → 更新 `lastResult` + `stats`
+  - 判题 → 更新 `lastResult` + `stats`，同时调用 `ensureAudio()`（手势解锁）
   - 标准模式第 20 题答完 → `finished`
-  - 否则显示反馈 `FEEDBACK_DELAY_MS` 后自动切题（防连点竞态：`answeredRef` 直到切题才复位）
+  - 否则显示反馈 `FEEDBACK_DELAY_MS` 后自动切题并播放（防连点竞态：`answeredRef` 直到切题才复位）
 - 限时模式：`useEffect` + `setInterval` 每秒递减 `timeRemaining`，归零 → `finished`
 - 无限模式：`stop()` → `finished`，并清空挂起的切题定时器
-- `restart()`: 重置全部状态并出第一题
+- `restart()`: 重置全部状态、出第一题并播放
+- `replay()`: 重播当前题（`isPlaying` 期间忽略）
 
 ## 三个 Trainer Hook
 
-- `usePitchTrainer(mode)` — 音名: 半音 C3–C6，选项池 12 音名
-- `useIntervalTrainer(mode)` — 音程: 全量 12 种，随机根音（音域 C3–C6 内）与上/下行
-- `useChordTrainer(mode)` — 和弦: 全量 8 种，随机根音
-
-三者均返回 `GameSession`，只是 `createQuestion` 不同。
+- `usePitchTrainer(mode)` — 音名: 半音 C3–C6，选项池 12 音名，`playQuestion` = `playNote`
+- `useIntervalTrainer(mode)` — 音程: 全量 12 种，随机根音（音域 C3–C6 内）与上/下行，`playQuestion` = `playInterval`
+- `useChordTrainer(mode)` — 和弦: 全量 8 种，随机根音，`playQuestion` = `playChord`
 
 ## 组件规格
 
@@ -188,20 +187,28 @@ SessionPanel (key={`${questionType}:${gameMode}`})
 - 答对 / 共答 / 准确率% 三列
 - `[再来一局]` 按钮 → `restart()`
 
+### PlayArea
+
+- 大按钮 `▶ 播放题目`（`isPlaying` 时显示 `⏳ 播放中…` 并禁用）
+- 不再显示音符预览文本
+
 ### OptionsGrid / Feedback
 
 - 答后按钮禁用；正确项绿框绿底，错误选中项红框红底
+- 播放中（`isPlaying`）按钮同样禁用，防止未听完就作答
 - 反馈: `✅ 正确！` / `❌ 错误。` + 正确答案 + 音名详情（音程用 `→`，和弦用 `+`）
 
 ## 验收标准
 
-- [ ] 三种题型 × 三种玩法可自由切换，切换即重开
-- [ ] 标准模式第 20 题答完自动结算
-- [ ] 限时模式 2 分钟倒计时归零自动结算，剩余 ≤30s 变红
-- [ ] 无限模式点击"停止"立即结算
-- [ ] 结算界面显示 答对/共答/准确率，"再来一局"正常重开
-- [ ] 答题后反馈（含音名）可见约 1.5 秒再切下一题
-- [ ] 每题只能答一次，快速连点不重复计分
-- [ ] 切题后按钮恢复可点，分数统计准确
-- [ ] `npm run build` 成功
-- [ ] （音频接入后）三种播放方式音高正确
+- [x] 三种题型 × 三种玩法可自由切换，切换即重开
+- [x] 标准模式第 20 题答完自动结算
+- [x] 限时模式 2 分钟倒计时归零自动结算，剩余 ≤30s 变红
+- [x] 无限模式点击"停止"立即结算
+- [x] 结算界面显示 答对/共答/准确率，"再来一局"正常重开
+- [x] 答题后反馈（含音名）可见约 1.5 秒再切下一题
+- [x] 每题只能答一次，快速连点不重复计分
+- [x] 切题后按钮恢复可点，分数统计准确
+- [x] `npm run build` 成功
+- [x] 三种播放方式音高正确（Tone.js 十二平均律，A4=440Hz）
+- [x] 首次点击"播放题目"解锁音频，之后自动播放正常
+- [x] Header 音量滑块实时生效

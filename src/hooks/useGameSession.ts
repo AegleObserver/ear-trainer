@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ensureAudio } from '../audio/engine'
 import { FEEDBACK_DELAY_MS, STANDARD_QUESTION_COUNT, TIMED_LIMIT_SECONDS } from '../constants/gameConfig'
 import type { GameMode, GameSession, GameSessionState, QuizQuestion, QuizResult, QuizStats } from '../types'
 
 export function useGameSession(
   createQuestion: () => QuizQuestion,
   mode: GameMode,
+  playQuestion: (question: QuizQuestion) => Promise<void> | void,
 ): GameSession {
   const [state, setState] = useState<GameSessionState>('playing')
   const [question, setQuestion] = useState<QuizQuestion | null>(() => createQuestion())
@@ -13,6 +15,7 @@ export function useGameSession(
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
     mode === 'timed' ? TIMED_LIMIT_SECONDS : null,
   )
+  const [isPlaying, setIsPlaying] = useState(false)
   const answeredRef = useRef(false)
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const stateRef = useRef<GameSessionState>('playing')
@@ -27,10 +30,23 @@ export function useGameSession(
 
   useEffect(() => clearAdvanceTimer, [clearAdvanceTimer])
 
+  const play = useCallback(
+    async (target: QuizQuestion) => {
+      setIsPlaying(true)
+      try {
+        await playQuestion(target)
+      } finally {
+        setIsPlaying(false)
+      }
+    },
+    [playQuestion],
+  )
+
   const submitAnswer = useCallback(
     (answer: string) => {
       if (stateRef.current !== 'playing' || !question || answeredRef.current) return
       answeredRef.current = true
+      void ensureAudio()
       const correct = answer === question.correctAnswer
       setLastResult({ chosen: answer, correct })
       const newTotal = stats.total + 1
@@ -44,12 +60,14 @@ export function useGameSession(
       clearAdvanceTimer()
       advanceTimerRef.current = setTimeout(() => {
         if (stateRef.current !== 'playing') return
-        setQuestion(createQuestion())
+        const next = createQuestion()
+        setQuestion(next)
         setLastResult(null)
         answeredRef.current = false
+        void play(next)
       }, FEEDBACK_DELAY_MS)
     },
-    [question, stats, mode, createQuestion, clearAdvanceTimer],
+    [question, stats, mode, createQuestion, play, clearAdvanceTimer],
   )
 
   useEffect(() => {
@@ -75,16 +93,18 @@ export function useGameSession(
   const restart = useCallback(() => {
     clearAdvanceTimer()
     setState('playing')
-    setQuestion(createQuestion())
+    const first = createQuestion()
+    setQuestion(first)
     setLastResult(null)
     setStats({ total: 0, correct: 0 })
     setTimeRemaining(mode === 'timed' ? TIMED_LIMIT_SECONDS : null)
     answeredRef.current = false
-  }, [mode, createQuestion, clearAdvanceTimer])
+    void play(first)
+  }, [mode, createQuestion, play, clearAdvanceTimer])
 
   const replay = useCallback(() => {
-    // 音频引擎待接入
-  }, [])
+    if (stateRef.current === 'playing' && question) void play(question)
+  }, [question, play])
 
   return {
     mode,
@@ -93,6 +113,7 @@ export function useGameSession(
     lastResult,
     stats,
     timeRemaining,
+    isPlaying,
     submitAnswer,
     stop,
     restart,
