@@ -6,7 +6,7 @@ export const INTERVALS: IntervalDef[] = [
   { name: '小三度', semitones: 3 },
   { name: '大三度', semitones: 4 },
   { name: '纯四度', semitones: 5 },
-  { name: '三全音', semitones: 6 },
+  { name: '增四度', semitones: 6 },
   { name: '纯五度', semitones: 7 },
   { name: '小六度', semitones: 8 },
   { name: '大六度', semitones: 9 },

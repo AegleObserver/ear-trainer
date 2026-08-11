@@ -1,4 +1,4 @@
-export type PageId = 'ear-training' | 'play' | 'settings'
+export type PageId = 'ear-training' | 'play' | 'settings' | 'profile'
 
 export interface PageDef {
   id: PageId
@@ -10,6 +10,25 @@ export interface PageDef {
 export type Mode = 'pitch' | 'interval' | 'chord'
 export type GameMode = 'standard' | 'timed' | 'endless'
 export type GameSessionState = 'playing' | 'finished'
+
+export type RootRangeId = 'low' | 'mid' | 'high' | 'full'
+export type PitchKeyMode = 'white' | 'all'
+
+export interface UserSettings {
+  rootRange: RootRangeId
+  pitchKeyMode: PitchKeyMode
+  enabledIntervals: number[]
+  enabledChords: string[]
+}
+
+export interface QuizRecord {
+  id: string
+  timestamp: number
+  questionType: Mode
+  mode: GameMode
+  correct: number
+  total: number
+}
 
 export interface IntervalDef {
   name: string

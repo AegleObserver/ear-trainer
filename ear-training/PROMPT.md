@@ -50,6 +50,10 @@ src/
 │   └── chords.ts               # 全量 8 种和弦
 ├── constants/
 │   └── gameConfig.ts           # 玩法配置常量
+├── data/
+│   └── storage.ts              # localStorage + 根音区间 + 评级
+├── context/
+│   └── AppDataContext.tsx      # settings/records 全局状态
 ├── hooks/
 │   ├── useGameSession.ts       # 会话引擎: 出题/判题/自动切题/倒计时/结算
 │   ├── usePitchTrainer.ts
@@ -60,12 +64,13 @@ src/
 │   ├── GameModeSelector.tsx    # 标准/限时/无限 玩法切换
 │   ├── SessionStatusBar.tsx    # 局内进度/倒计时/停止
 │   ├── ResultsScreen.tsx       # 结算界面
-│   ├── PlayArea.tsx            # 播放/重播 + 音符显示
+│   ├── PlayArea.tsx            # 播放/重播
 │   ├── OptionsGrid.tsx         # 选项按钮网格
 │   ├── Feedback.tsx            # 对错反馈 + 音名显示
 │   └── QuizLayout.tsx          # 局内布局组合
 ├── pages/
-│   └── EarTrainingPage.tsx     # 挂载点
+│   ├── EarTrainingPage.tsx     # 音感测试
+│   └── ProfilePage.tsx         # 个人中心（记录/评级/配置）
 └── types/
     └── index.ts                # 类型定义
 ```
@@ -116,11 +121,41 @@ export interface GameSession {
 
 ### theory/intervals.ts
 
-全量 12 种音程：小二度 → 八度（`INTERVALS: IntervalDef[]`）。
+全量 12 种音程：小二度 → 八度（`INTERVALS: IntervalDef[]`）。其中 6 半音的音程名称为「增四度」。
 
 ### theory/chords.ts
 
 全量 8 种和弦：大三/小三/增三/减三/属七/大七/小七/减七（`CHORDS: ChordDef[]`）。
+
+## 个人中心与配置系统 — ✅ 已实现
+
+### 数据持久化 (data/storage.ts)
+
+- `localStorage` 保存 `ear-trainer.settings` 与 `ear-trainer.records`
+- `ROOT_RANGES`: 低/中/高/全音域 四档根音区间（midi 号）
+- `DEFAULT_SETTINGS`: 全音域 / 全键 / 音程和弦全选（空数组=全部）
+- `computeRating(records)`: 平均准确率 = 答对总数 / 答题总数，分档：
+  暂无数据 → 音乐新手(<50%) → 进阶学习者(<70%) → 熟练乐手(<85%) → 音乐达人(<95%) → 大师级
+
+### 全局状态 (context/AppDataContext.tsx)
+
+- `AppDataProvider` 包裹应用，提供 `settings / updateSettings / records / addRecord / clearRecords`
+- 结算（`session.state === 'finished'`）时自动写入一条记录（题型/玩法/答对/共答/时间）
+
+### 出题配置（影响题库）
+
+- **根音区间**（radio）：控制根音 midi 范围，区间上界自动减去音程/和弦跨度
+- **单音**（radio）：白键（自然音）/ 全键（含升降号）
+- **音程**（checkbox ×12）：只从勾选音程出题；空=全部
+- **和弦**（checkbox ×8）：只从勾选和弦出题；空=全部
+
+`createXQuestion(settings)` 接收 `UserSettings`，三个 trainer hook 通过 `useCallback` 依赖 settings。
+
+### ProfilePage（个人中心 Tab）
+
+- 参与次数 / 平均准确率 / 当前评级 三卡片
+- 最近 10 条记录（时间·题型·玩法·答对/共答·准确率）+ 清空记录
+- 考察配置面板（根音区间/单音/音程/和弦）
 
 ## 音频层 (src/audio/playNotes.ts) — ✅ 已实现
 

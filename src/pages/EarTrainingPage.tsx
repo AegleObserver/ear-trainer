@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import GameModeSelector from '../components/GameModeSelector'
 import ModeTabs from '../components/ModeTabs'
 import QuizLayout from '../components/QuizLayout'
 import ResultsScreen from '../components/ResultsScreen'
+import { useAppData } from '../context/AppDataContext'
 import { useChordTrainer } from '../hooks/useChordTrainer'
 import { useIntervalTrainer } from '../hooks/useIntervalTrainer'
 import { usePitchTrainer } from '../hooks/usePitchTrainer'
@@ -33,12 +34,30 @@ export default function EarTrainingPage() {
 }
 
 function SessionPanel({ questionType, gameMode }: { questionType: Mode; gameMode: GameMode }) {
+  const { settings, addRecord } = useAppData()
+  const savedRef = useRef(false)
+
   const session =
     questionType === 'pitch'
-      ? usePitchTrainer(gameMode)
+      ? usePitchTrainer(gameMode, settings)
       : questionType === 'interval'
-        ? useIntervalTrainer(gameMode)
-        : useChordTrainer(gameMode)
+        ? useIntervalTrainer(gameMode, settings)
+        : useChordTrainer(gameMode, settings)
+
+  useEffect(() => {
+    if (session.state === 'finished' && !savedRef.current) {
+      savedRef.current = true
+      addRecord({
+        questionType,
+        mode: session.mode,
+        correct: session.stats.correct,
+        total: session.stats.total,
+      })
+    }
+    if (session.state === 'playing') {
+      savedRef.current = false
+    }
+  }, [session.state, session.stats, session.mode, questionType, addRecord])
 
   if (session.state === 'finished') {
     return <ResultsScreen mode={session.mode} stats={session.stats} onRestart={session.restart} />

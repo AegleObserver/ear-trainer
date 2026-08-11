@@ -3,11 +3,13 @@ import { setVolume } from '../audio/engine'
 import type { PageDef, PageId } from '../types'
 import EarTrainingPage from '../pages/EarTrainingPage'
 import PlayPage from '../pages/PlayPage'
+import ProfilePage from '../pages/ProfilePage'
 import SettingsPage from '../pages/SettingsPage'
 
 const PAGES: PageDef[] = [
   { id: 'ear-training', label: '音感测试', icon: '🎧', enabled: true },
   { id: 'play', label: '演奏', icon: '🎹', enabled: false },
+  { id: 'profile', label: '个人中心', icon: '👤', enabled: true },
   { id: 'settings', label: '设置', icon: '⚙️', enabled: false },
 ]
 
@@ -71,6 +73,7 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
       <main className="flex-1 overflow-y-auto">
         {activePage === 'ear-training' && <EarTrainingPage />}
         {activePage === 'play' && <PlayPage />}
+        {activePage === 'profile' && <ProfilePage />}
         {activePage === 'settings' && <SettingsPage />}
       </main>
 
