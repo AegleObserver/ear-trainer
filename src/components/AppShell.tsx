@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { setVolume } from '../audio/engine'
+import { configureSynth, setVolume } from '../audio/engine'
+import { useAppData } from '../context/AppDataContext'
 import type { PageDef, PageId } from '../types'
 import EarTrainingPage from '../pages/EarTrainingPage'
 import TrainingGroundPage from '../pages/TrainingGroundPage'
@@ -12,7 +13,7 @@ const PAGES: PageDef[] = [
   { id: 'training', label: '训练场', icon: '🎼', enabled: true },
   { id: 'play', label: '演奏', icon: '🎹', enabled: false },
   { id: 'profile', label: '个人中心', icon: '👤', enabled: true },
-  { id: 'settings', label: '设置', icon: '⚙️', enabled: false },
+  { id: 'settings', label: '设置', icon: '⚙️', enabled: true },
 ]
 
 interface AppShellProps {
@@ -22,10 +23,19 @@ interface AppShellProps {
 
 export default function AppShell({ activePage, onNavigate }: AppShellProps) {
   const [volume, setVolumeState] = useState(0.8)
+  const { settings } = useAppData()
 
   useEffect(() => {
     setVolume(0.8)
   }, [])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', settings.theme)
+  }, [settings.theme])
+
+  useEffect(() => {
+    configureSynth(settings.timbre)
+  }, [settings.timbre])
 
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value)

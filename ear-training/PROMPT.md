@@ -71,7 +71,8 @@ src/
 ├── pages/
 │   ├── EarTrainingPage.tsx     # 音感测试
 │   ├── TrainingGroundPage.tsx  # 训练场（根音+音程/和弦发声）
-│   └── ProfilePage.tsx         # 个人中心（记录/评级/配置）
+│   ├── ProfilePage.tsx         # 个人中心（记录/评级/配置）
+│   └── SettingsPage.tsx        # 设置（页面风格/音色/测试参数）
 └── types/
     └── index.ts                # 类型定义
 ```
@@ -175,6 +176,32 @@ export interface GameSession {
 - 单选互斥而非多选，避免多选叠加成噪声簇
 - 音频 Promise 会立即 resolve，无法感知实际播完，故用 `setTimeout(1300ms)` 结束 playing 态并解除禁用
 - 底部导航现有 5 个 tab（音感测试/训练场/演奏/个人中心/设置），tab 内边距压缩为 `px-2 sm:px-3` 适配小屏
+
+## 个性化系统 (SettingsPage) — ✅ 已实现
+
+启用底部「设置」Tab，三个可调项（均存入 `UserSettings` 并持久化，旧数据经 `{...DEFAULT, ...raw}` 合并自动补默认值）：
+
+### 1. 页面风格 (theme)
+
+- `ThemeId = 'dark-cyan' | 'light' | 'dark-violet' | 'dark-amber'`
+- **实现**：Tailwind v4 工具类引用 `var(--color-*)`，故在 `src/index.css` 用 `[data-theme='...']` 作用域重写 `--color-slate-*` / `--color-cyan-*`（light 额外加深 emerald/rose 保证对比度）即可换肤，无需改组件
+- **应用**：`AppShell` effect 把 `settings.theme` 写到 `document.documentElement` 的 `data-theme`（html 是 body 祖先，body 背景随之生效）
+- `dark-cyan` 为默认主题，无需覆盖变量
+
+### 2. 音色类型 (timbre)
+
+- `TimbreId = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'fm'`
+- `engine.ts` 新增 `configureSynth(timbre)`：dispose 当前 PolySynth 并重建单例
+  - 前 4 档 → `PolySynth(Tone.Synth, { oscillator:{type}, envelope:现值 })`
+  - `fm` → `PolySynth(Tone.FMSynth, { harmonicity:3, modulationIndex:2, ... })`
+- 下一次发声即生效（各播放函数每次调用 `getSynth()`）
+
+### 3. 测试参数
+
+- 标准模式题量 `standardCount`（5/10/20/30，默认 20）
+- 限时模式时长 `timedLimitSeconds`（60/120/180/300，默认 120）
+- `useGameSession(createQuestion, mode, playQuestion, config?)` 新增可选 `config: GameSessionConfig`，缺省回退 constants；计时初始化/standard 结束判定/restart 均用 config
+- 三个 trainer hook 从 `settings` 传入；改后对下一局生效
 
 ## 音频层 (src/audio/playNotes.ts) — ✅ 已实现
 

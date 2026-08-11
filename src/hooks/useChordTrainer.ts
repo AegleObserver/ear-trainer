@@ -30,5 +30,8 @@ export function useChordTrainer(mode: GameMode, settings: UserSettings) {
   const playQuestion = useCallback(async (q: QuizQuestion) => {
     await playChord(q.notes)
   }, [])
-  return useGameSession(createQuestion, mode, playQuestion)
+  return useGameSession(createQuestion, mode, playQuestion, {
+    standardCount: settings.standardCount,
+    timedLimitSeconds: settings.timedLimitSeconds,
+  })
 }

@@ -25,5 +25,8 @@ export function usePitchTrainer(mode: GameMode, settings: UserSettings) {
   const playQuestion = useCallback(async (q: QuizQuestion) => {
     await playNote(q.notes[0])
   }, [])
-  return useGameSession(createQuestion, mode, playQuestion)
+  return useGameSession(createQuestion, mode, playQuestion, {
+    standardCount: settings.standardCount,
+    timedLimitSeconds: settings.timedLimitSeconds,
+  })
 }

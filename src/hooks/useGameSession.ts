@@ -1,19 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ensureAudio } from '../audio/engine'
 import { FEEDBACK_DELAY_MS, STANDARD_QUESTION_COUNT, TIMED_LIMIT_SECONDS } from '../constants/gameConfig'
-import type { GameMode, GameSession, GameSessionState, QuizQuestion, QuizResult, QuizStats } from '../types'
+import type {
+  GameMode,
+  GameSession,
+  GameSessionConfig,
+  GameSessionState,
+  QuizQuestion,
+  QuizResult,
+  QuizStats,
+} from '../types'
 
 export function useGameSession(
   createQuestion: () => QuizQuestion,
   mode: GameMode,
   playQuestion: (question: QuizQuestion) => Promise<void> | void,
+  config?: GameSessionConfig,
 ): GameSession {
+  const standardCount = config?.standardCount ?? STANDARD_QUESTION_COUNT
+  const timedLimitSeconds = config?.timedLimitSeconds ?? TIMED_LIMIT_SECONDS
   const [state, setState] = useState<GameSessionState>('playing')
   const [question, setQuestion] = useState<QuizQuestion | null>(() => createQuestion())
   const [lastResult, setLastResult] = useState<QuizResult | null>(null)
   const [stats, setStats] = useState<QuizStats>({ total: 0, correct: 0 })
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
-    mode === 'timed' ? TIMED_LIMIT_SECONDS : null,
+    mode === 'timed' ? timedLimitSeconds : null,
   )
   const [isPlaying, setIsPlaying] = useState(false)
   const answeredRef = useRef(false)
@@ -52,7 +63,7 @@ export function useGameSession(
       const newTotal = stats.total + 1
       setStats({ total: newTotal, correct: stats.correct + (correct ? 1 : 0) })
 
-      if (mode === 'standard' && newTotal >= STANDARD_QUESTION_COUNT) {
+      if (mode === 'standard' && newTotal >= standardCount) {
         setState('finished')
         return
       }
@@ -67,7 +78,7 @@ export function useGameSession(
         void play(next)
       }, FEEDBACK_DELAY_MS)
     },
-    [question, stats, mode, createQuestion, play, clearAdvanceTimer],
+    [question, stats, mode, createQuestion, play, clearAdvanceTimer, standardCount],
   )
 
   useEffect(() => {
@@ -97,10 +108,10 @@ export function useGameSession(
     setQuestion(first)
     setLastResult(null)
     setStats({ total: 0, correct: 0 })
-    setTimeRemaining(mode === 'timed' ? TIMED_LIMIT_SECONDS : null)
+    setTimeRemaining(mode === 'timed' ? timedLimitSeconds : null)
     answeredRef.current = false
     void play(first)
-  }, [mode, createQuestion, play, clearAdvanceTimer])
+  }, [mode, createQuestion, play, clearAdvanceTimer, timedLimitSeconds])
 
   const replay = useCallback(() => {
     if (stateRef.current === 'playing' && question) void play(question)

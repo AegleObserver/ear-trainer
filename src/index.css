@@ -10,6 +10,46 @@
   --color-wrong: #f87171;
 }
 
+/* ===== 页面主题：通过覆盖 Tailwind 颜色变量实现 =====
+   data-theme 挂在 <html> 上，变量随级联作用到整个应用。
+   dark-cyan 为默认，无需覆盖。 */
+
+/* 明亮日间：反转 slate 中性色阶 + 加深强调色以保证对比度 */
+[data-theme='light'] {
+  --color-slate-950: #f1f5f9;
+  --color-slate-900: #ffffff;
+  --color-slate-800: #e2e8f0;
+  --color-slate-700: #cbd5e1;
+  --color-slate-600: #64748b;
+  --color-slate-500: #64748b;
+  --color-slate-400: #475569;
+  --color-slate-300: #1e293b;
+  --color-slate-200: #1e293b;
+  --color-slate-100: #0f172a;
+  --color-slate-50: #0f172a;
+  --color-cyan-300: #0891b2;
+  --color-cyan-400: #0e7490;
+  --color-emerald-300: #059669;
+  --color-emerald-400: #059669;
+  --color-rose-300: #e11d48;
+}
+
+/* 黑夜·紫：强调色映射到 violet */
+[data-theme='dark-violet'] {
+  --color-cyan-300: #c4b5fd;
+  --color-cyan-400: #a78bfa;
+  --color-cyan-500: #8b5cf6;
+  --color-cyan-600: #7c3aed;
+}
+
+/* 黑夜·琥珀：强调色映射到 amber */
+[data-theme='dark-amber'] {
+  --color-cyan-300: #fcd34d;
+  --color-cyan-400: #fbbf24;
+  --color-cyan-500: #f59e0b;
+  --color-cyan-600: #d97706;
+}
+
 html,
 body,
 #root {

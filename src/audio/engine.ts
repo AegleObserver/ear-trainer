@@ -1,7 +1,9 @@
 import * as Tone from 'tone'
+import type { TimbreId } from '../types'
 
 let synth: Tone.PolySynth | null = null
 let started = false
+let currentTimbre: TimbreId = 'triangle'
 
 const UNLOCK_TIMEOUT_MS = 1500
 
@@ -23,23 +25,53 @@ export async function ensureAudio(): Promise<boolean> {
   }
 }
 
+function buildSynth(timbre: TimbreId): Tone.PolySynth {
+  if (timbre === 'fm') {
+    return new Tone.PolySynth(Tone.FMSynth, {
+      harmonicity: 3,
+      modulationIndex: 2,
+      oscillator: { type: 'triangle' },
+      envelope: {
+        attack: 0.02,
+        decay: 0.4,
+        sustain: 0.3,
+        release: 1,
+      },
+    }).toDestination()
+  }
+  const waveform = timbre
+  return new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: waveform },
+    envelope: {
+      attack: 0.02,
+      decay: 0.3,
+      sustain: 0.5,
+      release: 1,
+    },
+  }).toDestination()
+}
+
 /**
  * 全局 PolySynth 单例（十二平均律，A4 = 440Hz）。
  * PolySynth 支持多声部，可同时播放和弦。
  */
 export function getSynth(): Tone.PolySynth {
   if (!synth) {
-    synth = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'triangle' },
-      envelope: {
-        attack: 0.02,
-        decay: 0.3,
-        sustain: 0.5,
-        release: 1,
-      },
-    }).toDestination()
+    synth = buildSynth(currentTimbre)
   }
   return synth
+}
+
+/**
+ * 切换音色：销毁当前 PolySynth 并按新音色重建。
+ * 下一次发声即使用新音色。
+ */
+export function configureSynth(timbre: TimbreId): void {
+  currentTimbre = timbre
+  if (synth) {
+    synth.dispose()
+    synth = null
+  }
 }
 
 /**

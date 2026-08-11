@@ -13,12 +13,23 @@ export type GameSessionState = 'playing' | 'finished'
 
 export type RootRangeId = 'low' | 'mid' | 'high' | 'full'
 export type PitchKeyMode = 'white' | 'all'
+export type ThemeId = 'dark-cyan' | 'light' | 'dark-violet' | 'dark-amber'
+export type TimbreId = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'fm'
 
 export interface UserSettings {
   rootRange: RootRangeId
   pitchKeyMode: PitchKeyMode
   enabledIntervals: number[]
   enabledChords: string[]
+  theme: ThemeId
+  timbre: TimbreId
+  standardCount: number
+  timedLimitSeconds: number
+}
+
+export interface GameSessionConfig {
+  standardCount: number
+  timedLimitSeconds: number
 }
 
 export interface QuizRecord {

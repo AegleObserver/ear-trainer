@@ -33,5 +33,8 @@ export function useIntervalTrainer(mode: GameMode, settings: UserSettings) {
   const playQuestion = useCallback(async (q: QuizQuestion) => {
     await playInterval(q.notes[0], q.notes[1])
   }, [])
-  return useGameSession(createQuestion, mode, playQuestion)
+  return useGameSession(createQuestion, mode, playQuestion, {
+    standardCount: settings.standardCount,
+    timedLimitSeconds: settings.timedLimitSeconds,
+  })
 }

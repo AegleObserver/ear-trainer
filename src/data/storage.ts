@@ -1,4 +1,4 @@
-import type { QuizRecord, RootRangeId, UserSettings } from '../types'
+import type { QuizRecord, RootRangeId, ThemeId, TimbreId, UserSettings } from '../types'
 
 export const ROOT_RANGES: Record<RootRangeId, { label: string; lo: number; hi: number }> = {
   low: { label: '低音区 C3–B3', lo: 48, hi: 59 },
@@ -7,11 +7,34 @@ export const ROOT_RANGES: Record<RootRangeId, { label: string; lo: number; hi: n
   full: { label: '全音域 C3–C6', lo: 48, hi: 84 },
 }
 
+export const THEMES: Record<ThemeId, { label: string; preview: string[] }> = {
+  'dark-cyan': { label: '黑夜·青', preview: ['bg-slate-950', 'bg-slate-800', 'bg-cyan-400'] },
+  light: { label: '明亮日间', preview: ['bg-slate-100', 'bg-slate-800', 'bg-cyan-500'] },
+  'dark-violet': { label: '黑夜·紫', preview: ['bg-slate-950', 'bg-slate-800', 'bg-violet-400'] },
+  'dark-amber': { label: '黑夜·琥珀', preview: ['bg-slate-950', 'bg-slate-800', 'bg-amber-400'] },
+}
+
+export const TIMBRES: Record<TimbreId, { label: string; description: string }> = {
+  sine: { label: '正弦波', description: '柔和纯净，接近音叉' },
+  triangle: { label: '三角波', description: '温暖圆润（默认）' },
+  square: { label: '方波', description: '明亮电子，经典合成器' },
+  sawtooth: { label: '锯齿波', description: '明亮锐利，富有冲击力' },
+  fm: { label: '电子 FM', description: 'FM 调制音色，金属质感' },
+}
+
+export const STANDARD_COUNT_OPTIONS = [5, 10, 20, 30]
+
+export const TIMED_LIMIT_OPTIONS = [60, 120, 180, 300]
+
 export const DEFAULT_SETTINGS: UserSettings = {
   rootRange: 'full',
   pitchKeyMode: 'all',
   enabledIntervals: [],
   enabledChords: [],
+  theme: 'dark-cyan',
+  timbre: 'triangle',
+  standardCount: 20,
+  timedLimitSeconds: 120,
 }
 
 const SETTINGS_KEY = 'ear-trainer.settings'
