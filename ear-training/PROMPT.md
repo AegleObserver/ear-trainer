@@ -70,6 +70,7 @@ src/
 │   └── QuizLayout.tsx          # 局内布局组合
 ├── pages/
 │   ├── EarTrainingPage.tsx     # 音感测试
+│   ├── TrainingGroundPage.tsx  # 训练场（根音+音程/和弦发声）
 │   └── ProfilePage.tsx         # 个人中心（记录/评级/配置）
 └── types/
     └── index.ts                # 类型定义
@@ -156,6 +157,24 @@ export interface GameSession {
 - 参与次数 / 平均准确率 / 当前评级 三卡片
 - 最近 10 条记录（时间·题型·玩法·答对/共答·准确率）+ 清空记录
 - 考察配置面板（根音区间/单音/音程/和弦）
+
+## 训练场 (TrainingGroundPage) — ✅ 已实现
+
+底部新增「训练场」Tab，用于自定义发声练习。
+
+### 交互模型
+
+- **根音选择**：12 音名 chip（单选）+ 八度 −/+ 步进器（范围 2–6，默认 C4），页面顶部大号展示当前根音
+- **勾选即播放**：点击音程/和弦 chip 即选中并立即发声（单选互斥），再次点击已选项取消勾选
+- **无勾选**：主「播放」按钮只发出根音；有勾选时播放所选音程/和弦
+- **播放期间**：全部 chip、根音控制禁用，当前播放项高亮（animate-pulse），约 1.3s 后自动恢复
+- **音符构建**：`noteToMidi(rootName)` 得根音 midi；音程 `[root, root+semitones]`，和弦 `intervals.map(i => root+i)`，复用 `playNote/playInterval/playChord`
+
+### 设计决策
+
+- 单选互斥而非多选，避免多选叠加成噪声簇
+- 音频 Promise 会立即 resolve，无法感知实际播完，故用 `setTimeout(1300ms)` 结束 playing 态并解除禁用
+- 底部导航现有 5 个 tab（音感测试/训练场/演奏/个人中心/设置），tab 内边距压缩为 `px-2 sm:px-3` 适配小屏
 
 ## 音频层 (src/audio/playNotes.ts) — ✅ 已实现
 

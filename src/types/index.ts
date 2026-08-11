@@ -1,4 +1,4 @@
-export type PageId = 'ear-training' | 'play' | 'settings' | 'profile'
+export type PageId = 'ear-training' | 'training' | 'play' | 'settings' | 'profile'
 
 export interface PageDef {
   id: PageId

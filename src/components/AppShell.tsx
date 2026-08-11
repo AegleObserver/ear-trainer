@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { setVolume } from '../audio/engine'
 import type { PageDef, PageId } from '../types'
 import EarTrainingPage from '../pages/EarTrainingPage'
+import TrainingGroundPage from '../pages/TrainingGroundPage'
 import PlayPage from '../pages/PlayPage'
 import ProfilePage from '../pages/ProfilePage'
 import SettingsPage from '../pages/SettingsPage'
 
 const PAGES: PageDef[] = [
   { id: 'ear-training', label: '音感测试', icon: '🎧', enabled: true },
+  { id: 'training', label: '训练场', icon: '🎼', enabled: true },
   { id: 'play', label: '演奏', icon: '🎹', enabled: false },
   { id: 'profile', label: '个人中心', icon: '👤', enabled: true },
   { id: 'settings', label: '设置', icon: '⚙️', enabled: false },
@@ -72,6 +74,7 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         {activePage === 'ear-training' && <EarTrainingPage />}
+        {activePage === 'training' && <TrainingGroundPage />}
         {activePage === 'play' && <PlayPage />}
         {activePage === 'profile' && <ProfilePage />}
         {activePage === 'settings' && <SettingsPage />}
@@ -79,7 +82,7 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
 
       {/* Bottom tabs */}
       <nav className="sticky bottom-0 z-10 border-t border-slate-800 bg-slate-950/80 px-4 py-2 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-center gap-2">
+        <div className="mx-auto flex max-w-lg items-center justify-center gap-1 sm:gap-2">
           {PAGES.map((page) => {
             const isActive = activePage === page.id
             return (
@@ -91,10 +94,10 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
                 aria-current={isActive ? 'page' : undefined}
                 className={
                   isActive
-                    ? 'tab-button border-b-2 border-cyan-400 bg-slate-800/60 text-cyan-300'
+                    ? 'tab-button !px-2 sm:!px-3 border-b-2 border-cyan-400 bg-slate-800/60 text-cyan-300'
                     : page.enabled
-                      ? 'tab-button text-slate-300 hover:bg-slate-800/50'
-                      : 'tab-button cursor-not-allowed text-slate-600 hover:bg-transparent'
+                      ? 'tab-button !px-2 sm:!px-3 text-slate-300 hover:bg-slate-800/50'
+                      : 'tab-button !px-2 sm:!px-3 cursor-not-allowed text-slate-600 hover:bg-transparent'
                 }
               >
                 <span aria-hidden>{page.icon}</span>
