@@ -1,6 +1,6 @@
 import * as Tone from 'tone'
 
-let synth: Tone.Synth | null = null
+let synth: Tone.PolySynth | null = null
 let started = false
 
 const UNLOCK_TIMEOUT_MS = 1500
@@ -24,11 +24,12 @@ export async function ensureAudio(): Promise<boolean> {
 }
 
 /**
- * 全局 Synth 单例（十二平均律，A4 = 440Hz）。
+ * 全局 PolySynth 单例（十二平均律，A4 = 440Hz）。
+ * PolySynth 支持多声部，可同时播放和弦。
  */
-export function getSynth(): Tone.Synth {
+export function getSynth(): Tone.PolySynth {
   if (!synth) {
-    synth = new Tone.Synth({
+    synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'triangle' },
       envelope: {
         attack: 0.02,
