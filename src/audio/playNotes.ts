@@ -1,4 +1,4 @@
-import type { Unit } from 'tone'
+import * as Tone from 'tone'
 import { ensureAudio, getSynth } from './engine'
 
 export async function playNote(note: string, duration = 0.6): Promise<void> {
@@ -16,5 +16,9 @@ export async function playInterval(note1: string, note2: string): Promise<void> 
 
 export async function playChord(notes: string[]): Promise<void> {
   await ensureAudio()
-  getSynth().triggerAttackRelease(notes as unknown as Unit.Frequency, 1.2)
+  const synth = getSynth()
+  const now = Tone.now()
+  notes.forEach((note) => {
+    synth.triggerAttackRelease(note, 1.2, now)
+  })
 }
