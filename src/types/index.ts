@@ -8,7 +8,8 @@ export interface PageDef {
 }
 
 export type Mode = 'pitch' | 'interval' | 'chord'
-export type Difficulty = 'easy' | 'medium' | 'hard'
+export type GameMode = 'standard' | 'timed' | 'endless'
+export type GameSessionState = 'playing' | 'finished'
 
 export interface IntervalDef {
   name: string
@@ -36,15 +37,15 @@ export interface QuizStats {
   correct: number
 }
 
-export interface QuizTrainer {
-  difficulty: Difficulty
+export interface GameSession {
+  mode: GameMode
+  state: GameSessionState
   question: QuizQuestion | null
   lastResult: QuizResult | null
   stats: QuizStats
-  isPlaying: boolean
-  newQuestion: () => void
-  replay: () => void
+  timeRemaining: number | null
   submitAnswer: (answer: string) => void
-  setDifficulty: (d: Difficulty) => void
-  resetStats: () => void
+  stop: () => void
+  restart: () => void
+  replay: () => void
 }

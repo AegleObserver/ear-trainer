@@ -2,7 +2,7 @@
 
 ## 目标
 
-在已有 App 框架中实现音感测试功能，包含三种题型：音名识别、音程识别、和弦识别。
+在已有 App 框架中实现音感测试功能，包含三种题型（音名识别、音程识别、和弦识别）与三种玩法（标准、限时、无限）。
 
 ## 前置条件
 
@@ -20,30 +20,52 @@ f(n) = 440 × 2^((n − 69) / 12)
 
 其中 `n` 为 MIDI 编号（`69 = A4`）。代码中不需要手动查表换算频率——Tone.js 接受音名字符串（`'C4'`, `'E4'`）并自动按同一公式转换。`theory/notes.ts` 中的 `midiToFrequency` 使用该公式作为理论参考。
 
-## 项目结构（新增文件）
+## 玩法系统（替代原难度分级）
+
+| 玩法 | 规则 | 结束条件 | 局内状态栏 |
+|------|------|---------|-----------|
+| **标准** `standard` | 共 20 题，答完自动出下一题 | 第 20 题答完 → 结算 | 题目进度 `X / 20` + 答对数 |
+| **限时** `timed` | 120 秒倒计时（MM:SS），尽量多答 | 倒计时归零 → 结算 | 剩余时间 + 已答 + 答对 |
+| **无限** `endless` | 不限题数，随时可停止 | 点击"停止" → 结算 | 已答 + 答对 + 停止按钮 |
+
+- 三种玩法共用**同一全量题目池**（无难度分级）
+- 每局独立结算：答对 X / 共 Y · 准确率% + "再来一局"
+- 答题后显示反馈（含正确音名）约 1.5 秒，随后自动切下一题
+- 结算界面在 `state === 'finished'` 时替代局内界面
+- 切换玩法或题型 → 重新开局（`key={`${questionType}:${gameMode}`}` 重挂载）
+- 配置常量位于 `src/constants/gameConfig.ts`：
+  - `STANDARD_QUESTION_COUNT = 20`
+  - `TIMED_LIMIT_SECONDS = 120`
+  - `FEEDBACK_DELAY_MS = 1500`
+
+## 项目结构
 
 ```
 src/
 ├── audio/
-│   └── playNotes.ts            # playNote, playInterval, playChord
+│   └── playNotes.ts            # playNote, playInterval, playChord (待接入)
 ├── theory/
 │   ├── notes.ts                # MIDI↔音名↔频率 工具函数
-│   ├── intervals.ts            # 音程定义 + 难度分级
-│   └── chords.ts               # 和弦定义 + 难度分级
+│   ├── intervals.ts            # 全量 12 种音程
+│   └── chords.ts               # 全量 8 种和弦
+├── constants/
+│   └── gameConfig.ts           # 玩法配置常量
 ├── hooks/
+│   ├── useGameSession.ts       # 会话引擎: 出题/判题/自动切题/倒计时/结算
 │   ├── usePitchTrainer.ts
 │   ├── useIntervalTrainer.ts
 │   └── useChordTrainer.ts
 ├── components/
-│   ├── ModeTabs.tsx            # 音名/音程/和弦 模式切换
-│   ├── DifficultySelector.tsx  # 初中高 三档
-│   ├── ScoreBoard.tsx          # 分数统计
-│   ├── PlayArea.tsx            # 播放/重播按钮
+│   ├── ModeTabs.tsx            # 音名/音程/和弦 题型切换
+│   ├── GameModeSelector.tsx    # 标准/限时/无限 玩法切换
+│   ├── SessionStatusBar.tsx    # 局内进度/倒计时/停止
+│   ├── ResultsScreen.tsx       # 结算界面
+│   ├── PlayArea.tsx            # 播放/重播 + 音符显示
 │   ├── OptionsGrid.tsx         # 选项按钮网格
 │   ├── Feedback.tsx            # 对错反馈 + 音名显示
-│   └── QuizLayout.tsx          # 组合上面组件的统一布局
+│   └── QuizLayout.tsx          # 局内布局组合
 ├── pages/
-│   └── EarTrainingPage.tsx     # 替换占位，挂载 QuizLayout
+│   └── EarTrainingPage.tsx     # 挂载点
 └── types/
     └── index.ts                # 类型定义
 ```
@@ -51,91 +73,53 @@ src/
 ## 类型定义 (src/types/index.ts)
 
 ```ts
-export interface IntervalDef {
-  name: string      // '大三度'
-  semitones: number // 4
-}
+export type Mode = 'pitch' | 'interval' | 'chord'
+export type GameMode = 'standard' | 'timed' | 'endless'
+export type GameSessionState = 'playing' | 'finished'
 
-export interface ChordDef {
-  name: string           // '大三和弦'
-  intervals: number[]    // [0, 4, 7] semitones from root
-}
+export interface IntervalDef { name: string; semitones: number }
+export interface ChordDef { name: string; intervals: number[] }
 
 export interface QuizQuestion {
   notes: string[]        // ['C4'] or ['C4', 'E4'] or ['C4', 'E4', 'G4']
-  options: string[]      // shuffled answer choices
-  correctAnswer: string  // 'C' or '大三度' or '大三和弦'
+  options: string[]      // 打乱后的 4 个选项
+  correctAnswer: string
 }
 
-export interface QuizResult {
-  chosen: string
-  correct: boolean
-}
+export interface QuizResult { chosen: string; correct: boolean }
+export interface QuizStats { total: number; correct: number }
 
-export interface QuizStats {
-  total: number
-  correct: number
+export interface GameSession {
+  mode: GameMode
+  state: GameSessionState
+  question: QuizQuestion | null
+  lastResult: QuizResult | null
+  stats: QuizStats
+  timeRemaining: number | null   // 仅限时模式
+  submitAnswer: (answer: string) => void
+  stop: () => void               // 无限模式停止
+  restart: () => void            // 再来一局
+  replay: () => void             // 重播 (音频待接入)
 }
-
-export type Mode = 'pitch' | 'interval' | 'chord'
-export type Difficulty = 'easy' | 'medium' | 'hard'
 ```
 
 ## 理论数据层
 
 ### theory/notes.ts
 
-- `NOTE_NAMES`: `['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']`
-- `midiToNote(midi: number): string` — 60 → 'C4'
-- `noteToMidi(name: string): number` — 'C4' → 60
-- `midiToFrequency(midi: number): number` — `440 × 2^((n−69)/12)`
-- `randomNaturalNote(lo, hi)`, `randomChromaticNote(lo, hi)` — 随机音符
+- `NOTE_NAMES`: 12 个音名（含升降号）
+- `midiToNote(n)`: 60 → 'C4'
+- `noteToMidi(name)`: 'C4' → 60
+- `midiToFrequency(n)`: `440 × 2^((n−69)/12)`
+- `randomChromaticMidi(lo, hi)` 等随机工具
 
 ### theory/intervals.ts
 
-```ts
-export const INTERVALS: IntervalDef[] = [
-  { name: '小二度', semitones: 1 },
-  { name: '大二度', semitones: 2 },
-  { name: '小三度', semitones: 3 },
-  { name: '大三度', semitones: 4 },
-  { name: '纯四度', semitones: 5 },
-  { name: '三全音', semitones: 6 },
-  { name: '纯五度', semitones: 7 },
-  { name: '小六度', semitones: 8 },
-  { name: '大六度', semitones: 9 },
-  { name: '小七度', semitones: 10 },
-  { name: '大七度', semitones: 11 },
-  { name: '八度', semitones: 12 },
-]
-
-export const DIFFICULTY_INTERVALS: Record<Difficulty, IntervalDef[]> = {
-  easy: [/* 纯四度, 纯五度, 八度 */],
-  medium: [/* + 大二度, 大三度, 小三度, 大六度, 小六度 */],
-  hard: [/* 除纯一度外的全部 */],
-}
-```
+全量 12 种音程：小二度 → 八度（`INTERVALS: IntervalDef[]`）。
 
 ### theory/chords.ts
 
-```ts
-export const CHORDS: Record<Difficulty, ChordDef[]> = {
-  easy: [
-    { name: '大三和弦', intervals: [0, 4, 7] },
-    { name: '小三和弦', intervals: [0, 3, 7] },
-  ],
-  medium: [
-    { name: '增三和弦', intervals: [0, 4, 8] },
-    { name: '减三和弦', intervals: [0, 3, 6] },
-  ],
-  hard: [
-    { name: '属七和弦', intervals: [0, 4, 7, 10] },
-    { name: '大七和弦', intervals: [0, 4, 7, 11] },
-    { name: '小七和弦', intervals: [0, 3, 7, 10] },
-    { name: '减七和弦', intervals: [0, 3, 6, 9] },
-  ],
-}
-```
+全量 8 种和弦：大三/小三/增三/减三/属七/大七/小七/减七（`CHORDS: ChordDef[]`）。
 
 ## 音频层 (src/audio/playNotes.ts)
 
@@ -161,109 +145,63 @@ export async function playChord(notes: string[]) {
 }
 ```
 
+## 会话引擎 (hooks/useGameSession.ts)
+
+- 初始化即出第一题并处于 `playing`
+- `submitAnswer(answer)`:
+  - 判题 → 更新 `lastResult` + `stats`
+  - 标准模式第 20 题答完 → `finished`
+  - 否则显示反馈 `FEEDBACK_DELAY_MS` 后自动切题（防连点竞态：`answeredRef` 直到切题才复位）
+- 限时模式：`useEffect` + `setInterval` 每秒递减 `timeRemaining`，归零 → `finished`
+- 无限模式：`stop()` → `finished`，并清空挂起的切题定时器
+- `restart()`: 重置全部状态并出第一题
+
 ## 三个 Trainer Hook
 
-### 共同接口
+- `usePitchTrainer(mode)` — 音名: 半音 C3–C6，选项池 12 音名
+- `useIntervalTrainer(mode)` — 音程: 全量 12 种，随机根音（音域 C3–C6 内）与上/下行
+- `useChordTrainer(mode)` — 和弦: 全量 8 种，随机根音
 
-```ts
-{
-  question: QuizQuestion | null
-  lastResult: QuizResult | null
-  stats: QuizStats
-  isPlaying: boolean
-  newQuestion: () => void
-  replay: () => void
-  submitAnswer: (answer: string) => void
-  setDifficulty: (d: Difficulty) => void
-  resetStats: () => void
-}
-```
-
-### usePitchTrainer
-
-- Easy: 随机自然音 (C4–B4)；Medium: 半音 (C4–B4)；Hard: 半音 (C3–C6)
-- 选项: 正确音名 + 干扰项共 4 个（Easy 只用自然音名，Medium/Hard 用 12 音名）
-- `newQuestion()` 自动调用 `playNote()`
-
-### useIntervalTrainer
-
-- 按难度取音程池，随机音程 + 随机起始音（音域 C3–C6 内），随机上/下行
-- 选项: 正确答案 + 3 干扰项，打乱
-- `newQuestion()` 调用 `playInterval(note1, note2)`；notes 如 `['C4', 'E4']`
-
-### useChordTrainer
-
-- Easy 只取 easy 池；Medium = easy+medium；Hard = 全部（含 7 和弦）
-- 随机和弦定义 + 随机根音
-- `newQuestion()` 调用 `playChord([root, ...])`；notes 如 `['C4', 'E4', 'G4']`
+三者均返回 `GameSession`，只是 `createQuestion` 不同。
 
 ## 组件规格
 
-### QuizLayout (主容器)
-
-- Props: `trainer` (hook 返回值), `modeName`
-- 垂直 flex 布局；首屏 `useEffect` 自动出题
-
-### ModeTabs
-
-- Props: `activeMode`, `onChange`
-- 3 按钮: "音名识别" / "音程识别" / "和弦识别"
-- 激活态: 下划线指示器 + 高亮；切换时重置题型状态
-
-### DifficultySelector
-
-- Props: `difficulty`, `onChange`
-- "初级" / "中级" / "高级"；切换时重置统计并出新题
-
-### PlayArea
-
-- Props: `isPlaying`, `onPlay`, `onReplay`
-- "▶ 播放" 新题 + 自动播放；"↻ 重播" 重放当前题
-
-### OptionsGrid
-
-- Props: `options`, `disabled`, `selectedAnswer`, `correctAnswer`, `onSelect`
-- 2 列 (移动端) / 自适应 (桌面端) 网格
-- 答完后按钮禁用；正确项绿框绿底，错误选中项红框红底
-
-### Feedback
-
-- Props: `result`, `notes`, `correctAnswer`
-- 无结果时隐藏
-- 正确: 绿条 "✅ 正确！答案是 {correctAnswer}"
-- 错误: 红条 "❌ 错误。正确答案是 {correctAnswer}"
-- 始终显示音名详情（音程用 `→` 连接，和弦用 `+` 连接），如 "C4 + E4 + G4"
-
-### ScoreBoard
-
-- Props: `stats`, `onReset`
-- 显示 "{correct} / {total}" 和准确率百分比 + "重置" 按钮
-
-## 集成到 EarTrainingPage
+### EarTrainingPage
 
 ```
-EarTrainingPage
-├── ModeTabs (activeMode state)
-├── [根据 activeMode 渲染对应 trainer hook]
-│   ├── QuizLayout
-│   │   ├── DifficultySelector
-│   │   ├── PlayArea
-│   │   ├── OptionsGrid
-│   │   └── Feedback
-│   └── ScoreBoard
+标题 + ModeTabs (题型)
+GameModeSelector (玩法, 页面级, 切换即重开)
+SessionPanel (key={`${questionType}:${gameMode}`})
+├── state === 'finished' → ResultsScreen
+└── 否则 → QuizLayout (SessionStatusBar + PlayArea + OptionsGrid + Feedback)
 ```
+
+### SessionStatusBar
+
+- 标准: `题目进度 X/20` + `答对 Y`
+- 限时: `⏱ MM:SS`（剩余 ≤30s 变红）+ `已答` + `答对`
+- 无限: `已答` + `答对` + `[停止]` 按钮
+
+### ResultsScreen
+
+- 玩法结束说明（已完成 20 题 / 时间到 / 已手动结束）
+- 答对 / 共答 / 准确率% 三列
+- `[再来一局]` 按钮 → `restart()`
+
+### OptionsGrid / Feedback
+
+- 答后按钮禁用；正确项绿框绿底，错误选中项红框红底
+- 反馈: `✅ 正确！` / `❌ 错误。` + 正确答案 + 音名详情（音程用 `→`，和弦用 `+`）
 
 ## 验收标准
 
-- [ ] 三种模式可自由切换
-- [ ] 难度切换后题目池正确更新
-- [ ] 点击"播放"能听到正确音高
-- [ ] 音名识别: 单音播放正常
-- [ ] 音程识别: 两音先后播放，间隔合理
-- [ ] 和弦识别: 多个音同时播放，和弦正确
-- [ ] 选择正确选项显示绿色反馈 + 音名信息
-- [ ] 选择错误选项显示红色反馈 + 显示正确答案
-- [ ] 分数统计准确
-- [ ] 每题只能答一次（答后选项 disabled）
-- [ ] 点击"下一题"或"播放"刷新题目
-- [ ] 鼠标/手指点击均正常工作
+- [ ] 三种题型 × 三种玩法可自由切换，切换即重开
+- [ ] 标准模式第 20 题答完自动结算
+- [ ] 限时模式 2 分钟倒计时归零自动结算，剩余 ≤30s 变红
+- [ ] 无限模式点击"停止"立即结算
+- [ ] 结算界面显示 答对/共答/准确率，"再来一局"正常重开
+- [ ] 答题后反馈（含音名）可见约 1.5 秒再切下一题
+- [ ] 每题只能答一次，快速连点不重复计分
+- [ ] 切题后按钮恢复可点，分数统计准确
+- [ ] `npm run build` 成功
+- [ ] （音频接入后）三种播放方式音高正确

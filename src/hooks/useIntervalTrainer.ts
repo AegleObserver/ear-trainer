@@ -1,13 +1,13 @@
 import { midiToNote, randomChromaticMidi } from '../theory/notes'
-import { DIFFICULTY_INTERVALS, INTERVALS } from '../theory/intervals'
+import { INTERVALS } from '../theory/intervals'
 import { buildOptions, pickRandom } from './quizUtils'
-import { useQuiz } from './useQuiz'
-import type { Difficulty, QuizQuestion } from '../types'
+import { useGameSession } from './useGameSession'
+import type { GameMode, QuizQuestion } from '../types'
 
 const INTERVAL_POOL = INTERVALS.map((i) => i.name)
 
-export function createIntervalQuestion(difficulty: Difficulty): QuizQuestion {
-  const interval = pickRandom(DIFFICULTY_INTERVALS[difficulty])
+export function createIntervalQuestion(): QuizQuestion {
+  const interval = pickRandom(INTERVALS)
   const ascending = Math.random() < 0.5
   const root = ascending
     ? randomChromaticMidi(48, 84 - interval.semitones)
@@ -20,6 +20,6 @@ export function createIntervalQuestion(difficulty: Difficulty): QuizQuestion {
   }
 }
 
-export function useIntervalTrainer() {
-  return useQuiz(createIntervalQuestion)
+export function useIntervalTrainer(mode: GameMode) {
+  return useGameSession(createIntervalQuestion, mode)
 }

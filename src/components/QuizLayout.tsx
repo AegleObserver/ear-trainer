@@ -1,34 +1,35 @@
-import type { QuizTrainer } from '../types'
-import DifficultySelector from './DifficultySelector'
+import type { GameSession } from '../types'
 import Feedback from './Feedback'
 import OptionsGrid from './OptionsGrid'
 import PlayArea from './PlayArea'
+import SessionStatusBar from './SessionStatusBar'
 
 interface QuizLayoutProps {
-  trainer: QuizTrainer
+  session: GameSession
   prompt: string
 }
 
-export default function QuizLayout({ trainer, prompt }: QuizLayoutProps) {
-  const { question, lastResult } = trainer
+export default function QuizLayout({ session, prompt }: QuizLayoutProps) {
+  const { question, lastResult } = session
 
   return (
     <div className="flex flex-col gap-4">
-      <DifficultySelector difficulty={trainer.difficulty} onChange={trainer.setDifficulty} />
+      <SessionStatusBar
+        mode={session.mode}
+        stats={session.stats}
+        timeRemaining={session.timeRemaining}
+        onStop={session.stop}
+      />
       {question && (
         <>
           <p className="text-center text-sm text-slate-400">{prompt}</p>
-          <PlayArea
-            notes={question.notes}
-            onNewQuestion={trainer.newQuestion}
-            onReplay={trainer.replay}
-          />
+          <PlayArea notes={question.notes} onReplay={session.replay} />
           <OptionsGrid
             options={question.options}
             disabled={!!lastResult}
             selectedAnswer={lastResult?.chosen ?? null}
             correctAnswer={lastResult ? question.correctAnswer : null}
-            onSelect={trainer.submitAnswer}
+            onSelect={session.submitAnswer}
           />
           <Feedback
             result={lastResult}

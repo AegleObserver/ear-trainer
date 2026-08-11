@@ -1,13 +1,13 @@
 import { midiToNote, randomChromaticMidi } from '../theory/notes'
 import { CHORDS } from '../theory/chords'
 import { buildOptions, pickRandom } from './quizUtils'
-import { useQuiz } from './useQuiz'
-import type { Difficulty, QuizQuestion } from '../types'
+import { useGameSession } from './useGameSession'
+import type { GameMode, QuizQuestion } from '../types'
 
-const CHORD_POOL = CHORDS.hard.map((c) => c.name)
+const CHORD_POOL = CHORDS.map((c) => c.name)
 
-export function createChordQuestion(difficulty: Difficulty): QuizQuestion {
-  const chord = pickRandom(CHORDS[difficulty])
+export function createChordQuestion(): QuizQuestion {
+  const chord = pickRandom(CHORDS)
   const top = Math.max(...chord.intervals)
   const root = randomChromaticMidi(48, 84 - top)
   return {
@@ -17,6 +17,6 @@ export function createChordQuestion(difficulty: Difficulty): QuizQuestion {
   }
 }
 
-export function useChordTrainer() {
-  return useQuiz(createChordQuestion)
+export function useChordTrainer(mode: GameMode) {
+  return useGameSession(createChordQuestion, mode)
 }

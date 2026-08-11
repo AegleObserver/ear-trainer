@@ -1,4 +1,4 @@
-import type { Difficulty, IntervalDef } from '../types'
+import type { IntervalDef } from '../types'
 
 export const INTERVALS: IntervalDef[] = [
   { name: '小二度', semitones: 1 },
@@ -14,9 +14,3 @@ export const INTERVALS: IntervalDef[] = [
   { name: '大七度', semitones: 11 },
   { name: '八度', semitones: 12 },
 ]
-
-export const DIFFICULTY_INTERVALS: Record<Difficulty, IntervalDef[]> = {
-  easy: INTERVALS.filter((i) => [5, 7, 12].includes(i.semitones)),
-  medium: INTERVALS.filter((i) => [2, 3, 4, 5, 7, 8, 9, 12].includes(i.semitones)),
-  hard: INTERVALS,
-}
