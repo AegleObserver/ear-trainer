@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #0f172a;
+  --color-surface-2: #1e293b;
+  --color-surface-3: #334155;
+  --color-accent: #22d3ee;
+  --color-accent-soft: #164e63;
+  --color-correct: #34d399;
+  --color-wrong: #f87171;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased;
+  font-family:
+    "Inter",
+    "PingFang SC",
+    "Microsoft YaHei",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+/* 细滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-700;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-600;
+}
+
+/* 文本选区 */
+::selection {
+  @apply bg-cyan-500/30;
+}
+
+/* 自定义组件类 */
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg backdrop-blur;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-medium transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 font-medium text-slate-950 transition-colors duration-150 hover:bg-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 active:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2 font-medium text-slate-200 transition-colors duration-150 hover:border-slate-500 hover:bg-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 active:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-disabled {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-800/30 px-4 py-2 font-medium text-slate-600 transition-colors duration-150 hover:border-slate-800 hover:bg-slate-800/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .tab-button {
+    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-150;
+  }
+}
