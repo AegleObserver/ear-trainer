@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   PLAY_BAR_COUNT,
   PLAY_BEATS_PER_BAR,
@@ -8,7 +8,7 @@ import {
   PLAY_ROW_H,
 } from '../constants/playConfig'
 import { midiToNote } from '../theory/notes'
-import type { MinStep, PlayTrack } from '../types'
+import type { MinStep, PlayNote, PlayTrack } from '../types'
 
 const TRACK_COLORS = ['bg-cyan-400', 'bg-emerald-400', 'bg-violet-400', 'bg-amber-400']
 
@@ -16,15 +16,34 @@ interface PitchGridProps {
   tracks: PlayTrack[]
   activeTrackId: string
   minStep: MinStep
+  onAddNote: (trackId: string, note: PlayNote) => void
+  onRemoveNote: (trackId: string, note: PlayNote) => void
 }
 
-export default function PitchGrid({ tracks, activeTrackId, minStep }: PitchGridProps) {
+interface DragState {
+  pitch: number
+  start: number
+  end: number
+}
+
+export default function PitchGrid({
+  tracks,
+  activeTrackId,
+  minStep,
+  onAddNote,
+  onRemoveNote,
+}: PitchGridProps) {
   const stepsPerBeat = minStep / 4
   const stepsPerBar = PLAY_BEATS_PER_BAR * stepsPerBeat
   const totalSteps = PLAY_BAR_COUNT * stepsPerBar
   const rowCount = PLAY_PITCH_HI - PLAY_PITCH_LO + 1
   const width = totalSteps * PLAY_CELL_W
   const height = rowCount * PLAY_ROW_H
+
+  const areaRef = useRef<HTMLDivElement>(null)
+  const [drag, setDrag] = useState<DragState | null>(null)
+
+  const activeTrack = tracks.find((t) => t.id === activeTrackId) ?? tracks[0]
 
   const pitches = useMemo(() => {
     const rows: number[] = []
@@ -56,6 +75,51 @@ export default function PitchGrid({ tracks, activeTrackId, minStep }: PitchGridP
     [tracks, activeTrackId],
   )
 
+  const occupiedCells = useMemo(() => {
+    const map = new Set<string>()
+    for (const n of activeTrack.notes) {
+      for (let i = 0; i < n.dur; i += 1) map.add(`${n.pitch}:${n.start + i}`)
+    }
+    return map
+  }, [activeTrack])
+
+  const cellFromEvent = (e: React.PointerEvent) => {
+    const rect = areaRef.current!.getBoundingClientRect()
+    const x = Math.floor((e.clientX - rect.left) / PLAY_CELL_W)
+    const y = Math.floor((e.clientY - rect.top) / PLAY_ROW_H)
+    const step = Math.min(Math.max(x, 0), totalSteps - 1)
+    const pitch = Math.min(Math.max(PLAY_PITCH_HI - y, PLAY_PITCH_LO), PLAY_PITCH_HI)
+    return { step, pitch }
+  }
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const { step, pitch } = cellFromEvent(e)
+    if (occupiedCells.has(`${pitch}:${step}`)) {
+      const note = activeTrack.notes.find((n) => n.pitch === pitch && n.start <= step && step < n.start + n.dur)
+      if (note) onRemoveNote(activeTrackId, note)
+      return
+    }
+    setDrag({ pitch, start: step, end: step })
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!drag) return
+    const { step } = cellFromEvent(e)
+    setDrag((d) => (d ? { ...d, end: Math.max(d.start, Math.min(step, totalSteps - 1)) } : d))
+  }
+
+  const handlePointerUp = () => {
+    if (!drag) return
+    onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + 1 })
+    setDrag(null)
+  }
+
+  const handlePointerCancel = () => {
+    setDrag(null)
+  }
+
   return (
     <section className="panel overflow-hidden">
       <div className="overflow-x-auto">
@@ -84,7 +148,15 @@ export default function PitchGrid({ tracks, activeTrackId, minStep }: PitchGridP
                 </div>
               ))}
             </div>
-            <div className="relative" style={{ width, height }}>
+            <div
+              ref={areaRef}
+              className="relative cursor-crosshair touch-none select-none"
+              style={{ width, height }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
+            >
               <div className="absolute inset-0" style={{ backgroundImage: gridBackground }} />
               {notes.map((n) => (
                 <div
@@ -95,6 +167,17 @@ export default function PitchGrid({ tracks, activeTrackId, minStep }: PitchGridP
                   style={{ left: n.left + 1, top: n.top + 1, width: n.width - 2, height: PLAY_ROW_H - 2 }}
                 />
               ))}
+              {drag && (
+                <div
+                  className="absolute rounded-sm bg-cyan-300/70"
+                  style={{
+                    left: drag.start * PLAY_CELL_W + 1,
+                    top: (PLAY_PITCH_HI - drag.pitch) * PLAY_ROW_H + 1,
+                    width: (drag.end - drag.start + 1) * PLAY_CELL_W - 2,
+                    height: PLAY_ROW_H - 2,
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>

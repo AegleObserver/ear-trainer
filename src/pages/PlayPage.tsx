@@ -14,10 +14,20 @@ export default function PlayPage() {
       <PlayStatusBar
         bpm={editor.bpm}
         minStep={editor.minStep}
+        canUndo={editor.canUndo}
+        canRedo={editor.canRedo}
         onBpmChange={editor.setBpm}
         onMinStepChange={editor.setMinStep}
+        onUndo={editor.undo}
+        onRedo={editor.redo}
       />
-      <PitchGrid tracks={editor.tracks} activeTrackId={editor.activeTrackId} minStep={editor.minStep} />
+      <PitchGrid
+        tracks={editor.tracks}
+        activeTrackId={editor.activeTrackId}
+        minStep={editor.minStep}
+        onAddNote={editor.addNote}
+        onRemoveNote={editor.removeNote}
+      />
     </div>
   )
 }

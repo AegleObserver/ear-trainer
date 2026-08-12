@@ -5,11 +5,24 @@ import type { MinStep } from '../types'
 interface PlayStatusBarProps {
   bpm: number
   minStep: MinStep
+  canUndo: boolean
+  canRedo: boolean
   onBpmChange: (bpm: number) => void
   onMinStepChange: (step: MinStep) => void
+  onUndo: () => void
+  onRedo: () => void
 }
 
-export default function PlayStatusBar({ bpm, minStep, onBpmChange, onMinStepChange }: PlayStatusBarProps) {
+export default function PlayStatusBar({
+  bpm,
+  minStep,
+  canUndo,
+  canRedo,
+  onBpmChange,
+  onMinStepChange,
+  onUndo,
+  onRedo,
+}: PlayStatusBarProps) {
   const [bpmInput, setBpmInput] = useState(String(bpm))
 
   useEffect(() => {
@@ -105,6 +118,26 @@ export default function PlayStatusBar({ bpm, minStep, onBpmChange, onMinStepChan
             </button>
           ))}
         </div>
+      </div>
+      <div className="ml-auto flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onUndo}
+          disabled={!canUndo}
+          title="撤回（仅网格音符编辑）"
+          className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ↶ 撤回
+        </button>
+        <button
+          type="button"
+          onClick={onRedo}
+          disabled={!canRedo}
+          title="恢复（仅网格音符编辑）"
+          className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ↷ 恢复
+        </button>
       </div>
     </section>
   )
