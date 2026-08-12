@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { configurePlayback, configureSynth, setVolume } from '../audio/engine'
+import { configurePlayback, configureRhythmVoice, configureSynth, setVolume } from '../audio/engine'
 import { useAppData } from '../context/AppDataContext'
 import type { PageDef, PageId } from '../types'
 import TestPage from '../pages/TestPage'
@@ -40,6 +40,10 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
   useEffect(() => {
     configurePlayback(settings.playbackMode)
   }, [settings.playbackMode])
+
+  useEffect(() => {
+    configureRhythmVoice(settings.rhythmVoice)
+  }, [settings.rhythmVoice])
 
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value)

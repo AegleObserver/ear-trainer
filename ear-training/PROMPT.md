@@ -234,15 +234,16 @@ export interface GameSession {
 
 ### 发声 (audio/rhythmPlay.ts)
 
-- `engine.ts` 打击乐单例：`getBeatSynth()`（MembraneSynth 主音，`volume: 3` 单独调响）；原节拍器参照 `getClickSynth()` 已删除
-- `playRhythmQuestion(labels)`：**直接起播、无节拍器参照、仅奏一遍**，按 `Tone.now() + 累计拍偏移` 错时触发；Promise 在总时长后 resolve → `isPlaying` 全程为 true，**选项锁定直至听完**
-- BPM 固定 90（`RHYTHM_BPM` 常量）
+- `engine.ts` 打击乐单例：`getBeatSynth()`（MembraneSynth 鼓点，`volume: 3` 单独调响）；节奏乐音 `getRhythmToneSynth()`（以 **A4** 发声的短促打击音，attack .001 / decay .2 / sustain 0，防余音重叠）
+- `configureRhythmVoice(voice)`：切换节奏音色（`drum` 或 5 档乐音波形）；`getRhythmHit()` 返回当前音源 + 击发音高（鼓→`C1`，乐音→`A4`）
+- `playRhythmQuestion(labels, bpm = 90)`：**直接起播、无节拍器参照、仅奏一遍**，拍长 `60/bpm` 动态换算，按 `Tone.now() + 累计拍偏移` 错时触发；Promise 在总时长后 resolve → `isPlaying` 全程为 true，**选项锁定直至听完**
+- 音色与 BPM 均来自设置：`settings.rhythmVoice` / `settings.rhythmBpm`（默认 `drum` / `90`），由 `useRhythmTrainer` 与 `RhythmGroundPage` 传入
 
 ### 记谱渲染
 
 - `NoteGlyph`：简化音符 SVG（空心=二分、实心=四分/八分/十六分、附点、三连音「3」），颜色走 `currentColor` 随主题
 - `RhythmPatternView`：节奏型组件，音符间距 `flexGrow: beats` 按拍数排布
-- `OptionsGrid`/`QuizLayout` 增加可选 `renderOption` prop（向后兼容），节奏测试页传入记谱渲染（整行字形 + 节奏型名）
+- `OptionsGrid`/`QuizLayout` 增加可选 `renderOption` + `optionsGridClass` prop（向后兼容）；节奏测试页传 `grid grid-cols-1` 使选项**整行全宽**容纳整小节字形，并传记谱渲染（整行字形 + 节奏型名）
 
 ### 训练场节奏域 (RhythmGroundPage)
 
@@ -255,7 +256,7 @@ export interface GameSession {
 
 ## 个性化系统 (SettingsPage) — ✅ 已实现
 
-启用底部「设置」Tab，四个可调项（均存入 `UserSettings` 并持久化，旧数据经 `{...DEFAULT, ...raw}` 合并自动补默认值）：
+启用底部「设置」Tab，可调项（均存入 `UserSettings` 并持久化，旧数据经 `{...DEFAULT, ...raw}` 合并自动补默认值）：
 
 ### 1. 页面风格 (theme)
 
@@ -286,6 +287,13 @@ export interface GameSession {
   - **逐音上行**：按 midi 升序逐个触发（旋律效果），每音时长 0.4s、间隔 0.3s
 - **全局生效**：`playInterval`/`playChord` 读取 `getPlaybackMode()`；音感测试出题播放与训练场即时播放均遵循；单音 `playNote` 不受影响
 - 实现：`engine.ts` 新增 `configurePlayback(mode)`/`getPlaybackMode()` 模块级状态（与 timbre 同源）；`playNotes.ts` 在 sequential 分支用 `Tone.now() + i*0.3` 错时触发；`AppShell` effect 应用 `settings.playbackMode`；`SettingsPage` 新增「播放方式」小节
+
+### 5. 节奏设置（节奏音色 + 速度）
+
+设置页「节奏」面板（对节奏测试与节奏训练场生效）：
+
+- **节奏音色** `rhythmVoice`：`'drum' | TimbreId`，默认 `drum`。鼓→膜音敲 `C1`；乐音 5 档→以 **A4** 发声的短促打击音。`AppShell` effect → `configureRhythmVoice`
+- **速度 BPM** `rhythmBpm`：默认 90，范围 60–200。预设档位单选框（60/80/90/100/120/150/180/200）+ 自定义数字输入（失焦钳制归界）；`playRhythmQuestion(labels, bpm)` 拍长 `60/bpm` 动态换算，已移除原固定 `RHYTHM_BPM` 常量
 
 ## 音频层 (src/audio/playNotes.ts) — ✅ 已实现
 

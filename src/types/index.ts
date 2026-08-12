@@ -17,6 +17,7 @@ export type RootRangeId = 'low' | 'mid' | 'high' | 'full'
 export type PitchKeyMode = 'white' | 'all'
 export type ThemeId = 'dark-cyan' | 'light' | 'dark-violet' | 'dark-amber'
 export type TimbreId = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'fm'
+export type RhythmVoiceId = 'drum' | TimbreId
 export type PlaybackMode = 'simultaneous' | 'sequential'
 
 export interface UserSettings {
@@ -27,6 +28,8 @@ export interface UserSettings {
   theme: ThemeId
   timbre: TimbreId
   playbackMode: PlaybackMode
+  rhythmVoice: RhythmVoiceId
+  rhythmBpm: number
   standardCount: number
   timedLimitSeconds: number
 }

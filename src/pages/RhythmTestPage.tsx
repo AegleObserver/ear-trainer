@@ -51,6 +51,7 @@ function SessionPanel({ gameMode }: { gameMode: GameMode }) {
     <QuizLayout
       session={session}
       prompt={PROMPT}
+      optionsGridClass="grid grid-cols-1 gap-3"
       renderOption={(opt) => (
         <div className="flex flex-col items-center gap-1">
           <RhythmPatternView labels={figuresToNoteLabels(opt.split('·').map((l) => FIGURE_BY_LABEL[l]))} />

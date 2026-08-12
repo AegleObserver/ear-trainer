@@ -7,6 +7,7 @@ interface OptionsGridProps {
   correctAnswer: string | null
   onSelect: (option: string) => void
   renderOption?: (option: string) => ReactNode
+  gridClass?: string
 }
 
 export default function OptionsGrid({
@@ -16,9 +17,10 @@ export default function OptionsGrid({
   correctAnswer,
   onSelect,
   renderOption,
+  gridClass = 'grid grid-cols-2 gap-3 sm:grid-cols-4',
 }: OptionsGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className={gridClass}>
       {options.map((opt) => {
         const isCorrect = disabled && opt === correctAnswer
         const isWrongSelected = disabled && opt === selectedAnswer && opt !== correctAnswer

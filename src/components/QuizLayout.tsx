@@ -9,9 +9,10 @@ interface QuizLayoutProps {
   session: GameSession
   prompt: string
   renderOption?: (option: string) => ReactNode
+  optionsGridClass?: string
 }
 
-export default function QuizLayout({ session, prompt, renderOption }: QuizLayoutProps) {
+export default function QuizLayout({ session, prompt, renderOption, optionsGridClass }: QuizLayoutProps) {
   const { question, lastResult } = session
 
   return (
@@ -33,6 +34,7 @@ export default function QuizLayout({ session, prompt, renderOption }: QuizLayout
             correctAnswer={lastResult ? question.correctAnswer : null}
             onSelect={session.submitAnswer}
             renderOption={renderOption}
+            gridClass={optionsGridClass}
           />
           <Feedback
             result={lastResult}

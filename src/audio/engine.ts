@@ -1,11 +1,15 @@
 import * as Tone from 'tone'
-import type { PlaybackMode, TimbreId } from '../types'
+import type { PlaybackMode, RhythmVoiceId, TimbreId } from '../types'
 
 let synth: Tone.PolySynth | null = null
 let beatSynth: Tone.MembraneSynth | null = null
+let rhythmToneSynth: Tone.PolySynth | null = null
 let started = false
 let currentTimbre: TimbreId = 'triangle'
 let currentPlayback: PlaybackMode = 'simultaneous'
+let currentRhythmVoice: RhythmVoiceId = 'drum'
+
+export const RHYTHM_TONE_NOTE = 'A4'
 
 const UNLOCK_TIMEOUT_MS = 1500
 
@@ -91,7 +95,7 @@ export function getPlaybackMode(): PlaybackMode {
 }
 
 /**
- * 打击乐主音单例（节奏型的音符敲击）。
+ * 打击乐主音单例（节奏型的鼓点敲击）。
  * 低频膜音听感偏弱，单独抬高音量使其在节奏中更突出。
  */
 export function getBeatSynth(): Tone.MembraneSynth {
@@ -105,6 +109,53 @@ export function getBeatSynth(): Tone.MembraneSynth {
     }).toDestination()
   }
   return beatSynth
+}
+
+/**
+ * 节奏乐音单例（以 A4 发声的短促打击音，避免长余音重叠）。
+ */
+function getRhythmToneSynth(): Tone.PolySynth {
+  const voice = currentRhythmVoice as Exclude<RhythmVoiceId, 'drum'>
+  if (rhythmToneSynth) return rhythmToneSynth
+  if (voice === 'fm') {
+    rhythmToneSynth = new Tone.PolySynth(Tone.FMSynth, {
+      harmonicity: 3,
+      modulationIndex: 2,
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 },
+    }).toDestination()
+  } else {
+    rhythmToneSynth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: voice },
+      envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 },
+    }).toDestination()
+  }
+  return rhythmToneSynth
+}
+
+/**
+ * 切换节奏音色：鼓点 / 以 A4 发声的 5 档乐音。
+ * 下一次发声即使用新音色。
+ */
+export function configureRhythmVoice(voice: RhythmVoiceId): void {
+  currentRhythmVoice = voice
+  if (voice !== 'drum') {
+    getRhythmToneSynth()
+  } else if (rhythmToneSynth) {
+    rhythmToneSynth.dispose()
+    rhythmToneSynth = null
+  }
+}
+
+/**
+ * 当前节奏音色对应的音源与击发音高。
+ * 鼓 → 膜音敲 C1；乐音 → A4。
+ */
+export function getRhythmHit(): { synth: Tone.PolySynth | Tone.MembraneSynth; note: string } {
+  if (currentRhythmVoice === 'drum') {
+    return { synth: getBeatSynth(), note: 'C1' }
+  }
+  return { synth: getRhythmToneSynth(), note: RHYTHM_TONE_NOTE }
 }
 
 /**

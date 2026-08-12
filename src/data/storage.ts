@@ -1,4 +1,4 @@
-import type { PlaybackMode, QuizRecord, RootRangeId, ThemeId, TimbreId, UserSettings } from '../types'
+import type { PlaybackMode, QuizRecord, RhythmVoiceId, RootRangeId, ThemeId, TimbreId, UserSettings } from '../types'
 
 export const ROOT_RANGES: Record<RootRangeId, { label: string; lo: number; hi: number }> = {
   low: { label: '低音区 C3–B3', lo: 48, hi: 59 },
@@ -27,6 +27,21 @@ export const PLAYBACK_MODES: Record<PlaybackMode, { label: string; description: 
   sequential: { label: '逐音上行', description: '按音高从低到高逐个播放（旋律效果）' },
 }
 
+export const RHYTHM_VOICES: Record<RhythmVoiceId, { label: string; description: string }> = {
+  drum: { label: '打击鼓', description: '膜音鼓点（默认）' },
+  sine: { label: '正弦波 A4', description: '柔和纯净，以 A4 发声' },
+  triangle: { label: '三角波 A4', description: '温暖圆润，以 A4 发声' },
+  square: { label: '方波 A4', description: '明亮电子，以 A4 发声' },
+  sawtooth: { label: '锯齿波 A4', description: '明亮锐利，以 A4 发声' },
+  fm: { label: '电子 FM A4', description: 'FM 调制音色，以 A4 发声' },
+}
+
+export const RHYTHM_BPM_PRESETS = [60, 80, 90, 100, 120, 150, 180, 200]
+
+export const RHYTHM_BPM_MIN = 60
+
+export const RHYTHM_BPM_MAX = 200
+
 export const STANDARD_COUNT_OPTIONS = [5, 10, 20, 30]
 
 export const TIMED_LIMIT_OPTIONS = [60, 120, 180, 300]
@@ -39,6 +54,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark-cyan',
   timbre: 'triangle',
   playbackMode: 'simultaneous',
+  rhythmVoice: 'drum',
+  rhythmBpm: 90,
   standardCount: 20,
   timedLimitSeconds: 120,
 }

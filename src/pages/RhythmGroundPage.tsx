@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { playRhythmQuestion } from '../audio/rhythmPlay'
 import RhythmPatternView from '../components/RhythmPatternView'
+import { useAppData } from '../context/AppDataContext'
 import { NOTE_VALUES, NOTE_VALUE_BY_ID, patternToLabel } from '../theory/rhythm'
 import type { NoteValueId } from '../theory/rhythm'
 
@@ -13,6 +14,7 @@ function formatBeats(b: number): string {
 }
 
 export default function RhythmGroundPage() {
+  const { settings } = useAppData()
   const [pattern, setPattern] = useState<NoteValueId[]>([])
   const [playing, setPlaying] = useState(false)
   const playingRef = useRef(false)
@@ -28,12 +30,12 @@ export default function RhythmGroundPage() {
     playingRef.current = true
     setPlaying(true)
     try {
-      await playRhythmQuestion(labels)
+      await playRhythmQuestion(labels, settings.rhythmBpm)
     } finally {
       playingRef.current = false
       setPlaying(false)
     }
-  }, [labels, pattern.length])
+  }, [labels, pattern.length, settings.rhythmBpm])
 
   const append = (id: NoteValueId) => {
     if (playing) return

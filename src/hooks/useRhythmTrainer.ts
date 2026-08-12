@@ -6,9 +6,12 @@ import type { GameMode, QuizQuestion, UserSettings } from '../types'
 
 export function useRhythmTrainer(mode: GameMode, settings: UserSettings) {
   const createQuestion = useCallback(() => createRhythmQuestion(), [])
-  const playQuestion = useCallback(async (q: QuizQuestion) => {
-    await playRhythmQuestion(q.notes)
-  }, [])
+  const playQuestion = useCallback(
+    async (q: QuizQuestion) => {
+      await playRhythmQuestion(q.notes, settings.rhythmBpm)
+    },
+    [settings.rhythmBpm],
+  )
   return useGameSession(createQuestion, mode, playQuestion, {
     standardCount: settings.standardCount,
     timedLimitSeconds: settings.timedLimitSeconds,
