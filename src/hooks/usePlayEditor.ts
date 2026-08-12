@@ -62,8 +62,22 @@ export default function usePlayEditor() {
   }, [])
 
   const setMinStep = useCallback((step: MinStep) => {
+    const oldMinStep = minStepRef.current
+    if (oldMinStep === step) return
+    const factor = step / oldMinStep
+    // 缩放所有音符：start/dur 按比例换算（四舍五入）
+    setTracks((prev) =>
+      prev.map((track) => ({
+        ...track,
+        notes: track.notes.map((note) => ({
+          ...note,
+          start: Math.round(note.start * factor),
+          dur: Math.round(note.dur * factor),
+        })),
+      }))
+    )
     setMinStepState(step)
-  }, [])
+  }, [minStepRef])
 
   const updateTrack = useCallback((trackId: string, updater: (t: PlayTrack) => PlayTrack) => {
     setTracks((prev) => prev.map((t) => (t.id === trackId ? updater(t) : t)))

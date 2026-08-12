@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   PLAY_BAR_COUNT,
   PLAY_BEATS_PER_BAR,
@@ -47,6 +47,10 @@ export default function PitchGrid({
 
   const areaRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
+
+  useEffect(() => {
+    setDrag(null)
+  }, [activeTrackId])
 
   const activeTrack = tracks.find((t) => t.id === activeTrackId) ?? tracks[0]
 
