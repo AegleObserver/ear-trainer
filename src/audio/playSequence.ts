@@ -1,8 +1,8 @@
 import * as Tone from 'tone'
-import { ensureAudio, RHYTHM_TONE_NOTE } from './engine'
+import { ensureAudio } from './engine'
 import type { MinStep, PlayTrack, RhythmVoiceId } from '../types'
 
-const HIT_DURATION = 0.08
+const DURATION_FACTOR = 0.95
 
 const voiceCache = new Map<RhythmVoiceId, Tone.PolySynth | Tone.MembraneSynth>()
 
@@ -23,12 +23,12 @@ function getVoiceSynth(voice: RhythmVoiceId): Tone.PolySynth | Tone.MembraneSynt
       harmonicity: 3,
       modulationIndex: 2,
       oscillator: { type: 'triangle' },
-      envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 },
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.7, release: 0.15 },
     }).toDestination()
   } else {
     synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: voice },
-      envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 },
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.7, release: 0.15 },
     }).toDestination()
   }
   voiceCache.set(voice, synth)
@@ -49,8 +49,9 @@ export interface PlaySequenceOptions {
 }
 
 /**
- * 播放多轨序列：每条音轨独立音频实例（鼓 → 膜音 C1，乐音 → A4 短促音），
- * 静音轨跳过；从 startTick（最小分度格）起播，至旋律结束或手动 stop 结束。
+ * 播放多轨序列：每条音轨独立音频实例（鼓 → 膜音敲 C1；乐音轨按音符 MIDI 音高发声，
+ * 发声时值 = 音符时值 × 0.95 留呼吸），静音轨跳过；从 startTick（最小分度格）起播，
+ * 至旋律结束或手动 stop 结束。
  * 基于 Tone.Transport 调度，支持暂停/继续。
  */
 export async function playSequence(
@@ -85,13 +86,15 @@ export async function playSequence(
   for (const track of tracks) {
     if (track.muted) continue
     const synth = getVoiceSynth(track.voice)
-    const hitNote = track.voice === 'drum' ? 'C1' : RHYTHM_TONE_NOTE
     for (const note of track.notes) {
       const endAt = (note.start + note.dur - startTick) * secPerStep
       if (endAt <= 0) continue
       const attackAt = Math.max(offset, (note.start - startTick) * secPerStep)
+      const hitNote =
+        track.voice === 'drum' ? 'C1' : Tone.Frequency(note.pitch, 'midi').toNote()
+      const hitDuration = note.dur * secPerStep * DURATION_FACTOR
       Tone.Transport.schedule((time) => {
-        synth.triggerAttackRelease(hitNote, HIT_DURATION, time)
+        synth.triggerAttackRelease(hitNote, hitDuration, time)
       }, attackAt)
       lastEnd = Math.max(lastEnd, endAt)
     }

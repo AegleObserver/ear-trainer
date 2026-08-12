@@ -8,7 +8,7 @@
 - **时序粒度**：步进式（固定格点），音符对齐网格放置；音符时值恒为**当前最小分度的整数倍**
 - **多声部**：网格支持多条并行音轨（见「音轨」），涉及资源调度考量；当前实现不设上限（≥ 2 满足）
 - **缩放**：横/纵轴可缩放为规划项，**现阶段不做要求**
-- **音色**：现阶段不引入复杂音色，**沿用节奏型测试**音色池——鼓 → MembraneSynth 敲 `C1`；乐音 5 档 → 以 **A4** 发声的短促音。
+- **音色**：现阶段不引入复杂音色，**沿用节奏型测试**音色池——鼓 → MembraneSynth 敲 `C1`（打击乐，无旋律音高）；乐音 5 档 → **按网格音符音高（MIDI）发声**（`pitch → Tone.Frequency(midi).toNote()`），**发声时值 = 音符时值 × 0.95**（留呼吸），长音持续、短音短促。
   - 实现：`src/audio/playSequence.ts` 内按 `voice` 缓存独立实例（`voiceCache: Map<RhythmVoiceId, PolySynth | MembraneSynth>`），**不与**节奏测试的全局 `currentRhythmVoice` 耦合；同音色音轨共享实例（最多 6 个实例），天然满足资源调度约束。
 
 ## 节拍与状态栏 — ✅ 已实现
@@ -44,7 +44,7 @@
 - 状态栏提供 **播放 / 暂停 / 继续 / 停止** 键
 - 实现：`src/audio/playSequence.ts` 基于 `Tone.Transport` 调度——
   - 事件时间 = `(note.start − startTick) × 步长秒`，起点之前已结束的音符跳过，跨过起点的音符攻击点钳制到起点
-  - 静音轨跳过；鼓轨固定 `C1`、乐音轨固定 `A4`（`HIT_DURATION = 0.08s` 短促音）
+  - 静音轨跳过；鼓轨敲 `C1` 打击音（短促，不随网格音高/时值变化）；乐音轨**按音符 `pitch` 发声**，**时值 = `note.dur × 步长秒 × 0.95`**（留呼吸），乐音 envelope 含 sustain（attack .005 / decay .1 / sustain .7 / release .15）以支持长音持续
   - 结束回调 `Tone.Transport.schedule(finish, lastEnd)` 统一在末尾触发 → `Promise` resolve → `isPlaying` 复位
   - `pause()` = `Transport.pause()`，`resume()` = `Transport.start()`，`stop()` = `Transport.stop()` + `cancel(0)` 并提前 resolve
   - 首次播放经 `ensureAudio()` 手势解锁
@@ -108,6 +108,7 @@ export interface PlayTrack {
 - `playSequence.ts`：Tone.Transport 调度 + 按 voice 缓存独立实例；start_point 起播（顶部小节点击设起点）
 - 播放 / 暂停 / 继续 / 停止 + `isPlaying` 锁定编辑；首次播放 `ensureAudio()` 解锁
 - 静音轨跳过发声；结束回调统一收尾
+- **发声修正**：乐音轨按音符 MIDI 音高发声（原固定 A4 已废弃）；发声时值 = 音符时值 × 0.95（原统一 0.08s 短促音已废弃），乐音 envelope 含 sustain
 
 ### M5 打磨 / 导出（后续）
 - 缩放、3/4 拍号开放、MP3/WAV 导出（`OfflineAudioContext` 离线渲染方案待评估）
