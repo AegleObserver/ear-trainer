@@ -5,6 +5,7 @@ import ResultsScreen from '../components/ResultsScreen'
 import RhythmPatternView from '../components/RhythmPatternView'
 import { useAppData } from '../context/AppDataContext'
 import { useRhythmTrainer } from '../hooks/useRhythmTrainer'
+import { FIGURE_BY_LABEL, figuresToNoteLabels } from '../theory/rhythm'
 import type { GameMode } from '../types'
 
 const PROMPT = '请选择你听到的节奏型：'
@@ -52,7 +53,7 @@ function SessionPanel({ gameMode }: { gameMode: GameMode }) {
       prompt={PROMPT}
       renderOption={(opt) => (
         <div className="flex flex-col items-center gap-1">
-          <RhythmPatternView labels={opt.split('·')} />
+          <RhythmPatternView labels={figuresToNoteLabels(opt.split('·').map((l) => FIGURE_BY_LABEL[l]))} />
           <span className="text-xs text-slate-500">{opt}</span>
         </div>
       )}

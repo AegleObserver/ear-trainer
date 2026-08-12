@@ -206,27 +206,47 @@ export interface GameSession {
 
 8 种 `NoteValueDef`（无休止符）：全音符4 / 二分2 / 四分1 / 八分0.5 / 十六分0.25 / 附点四分1.5 / 附点八分0.75 / 八分三连音1/3。
 
-### 出题
+### 预制节奏型（节奏考察原子）
 
-- `createRhythmQuestion()`：随机生成 2–4 音、总拍 ≤ 4 的节奏型（`randomPattern()`），产出 4 个两两唯一的记谱选项
-- 复用 `QuizQuestion`：`notes` = 中文时值标签数组（Feedback 可直接读）；`options`/`correctAnswer` = 标签连接串（`四分音符·四分音符`），标签与时值一一对应天然唯一
+`RHYTHM_FIGURES`：10 种预制节奏型，每个 = `{ id, label, beats, seq }`，`seq` 展开为音符值序列供渲染与播放：
+
+| 节奏型 | beats | seq |
+|--------|-------|-----|
+| 二分 | 2 | half |
+| 四分 | 1 | quarter |
+| 八分 | 0.5 | eighth |
+| 三连音 | 1 | triplet ×3 |
+| 前十六分 (16·16·8) | 1 | 16, 16, 8 |
+| 后十六分 (8·16·16) | 1 | 8, 16, 16 |
+| 切分音 (16-8-16) | 1 | 16, 8, 16 |
+| 切分音 (4-8-4) | 2.5 | 4, 8, 4 |
+| 附点八分 | 0.75 | dotted-eighth |
+| 附点四分 | 1.5 | dotted-quarter |
+
+标签不含「·」，保证可按「·」安全拼接/解析。
+
+### 出题（组合成完整 4/4 小节）
+
+- `randomMeasure()`：回溯枚举 2–4 个节奏型、**时值和恰为 4 拍**（4/4 小节）的序列，随机取一（合法组合全集缓存在 `validMeasures`）
+- `createRhythmQuestion()`：正确项 + 3 个干扰项（同为 4/4 小节的不同组合），按**展开后音符序列指纹 `noteSeqKey` 去重**，确保选项之间听感必不相同
+- 选项 token = 中文节奏型名连接串（如 `四分·三连音·四分`）；`notes` = 展开后的音符值标签数组（供播放与 Feedback）
 - 会话复用 `useGameSession`（`useRhythmTrainer`），记录 `questionType: 'rhythm'`
 
 ### 发声 (audio/rhythmPlay.ts)
 
-- `engine.ts` 新增打击乐单例：`getBeatSynth()`（MembraneSynth 主音）、`getClickSynth()`（NoiseSynth 参照单击）
-- `playRhythmQuestion(labels)`：**节拍器参照（1 小节）→ 节奏型 ×2**，按 `Tone.now() + 累计拍偏移` 错时触发；Promise 在总时长后 resolve → `isPlaying` 全程为 true，**选项锁定直至听完**
-- BPM 固定 90（`RHYTHM_BPM` 常量），参照小节/播放遍数由 `RHYTHM_REFERENCE_BARS`/`RHYTHM_PATTERN_PLAYS` 控制
+- `engine.ts` 打击乐单例：`getBeatSynth()`（MembraneSynth 主音，`volume: 3` 单独调响）；原节拍器参照 `getClickSynth()` 已删除
+- `playRhythmQuestion(labels)`：**直接起播、无节拍器参照、仅奏一遍**，按 `Tone.now() + 累计拍偏移` 错时触发；Promise 在总时长后 resolve → `isPlaying` 全程为 true，**选项锁定直至听完**
+- BPM 固定 90（`RHYTHM_BPM` 常量）
 
 ### 记谱渲染
 
 - `NoteGlyph`：简化音符 SVG（空心=二分、实心=四分/八分/十六分、附点、三连音「3」），颜色走 `currentColor` 随主题
 - `RhythmPatternView`：节奏型组件，音符间距 `flexGrow: beats` 按拍数排布
-- `OptionsGrid`/`QuizLayout` 增加可选 `renderOption` prop（向后兼容），节奏测试页传入记谱渲染
+- `OptionsGrid`/`QuizLayout` 增加可选 `renderOption` prop（向后兼容），节奏测试页传入记谱渲染（整行字形 + 节奏型名）
 
 ### 训练场节奏域 (RhythmGroundPage)
 
-拼接构建器：点选 8 种音符值追加（≤4 音）→ 记谱预览 → 播放（含参照）→ 清空/删末位；播放期间禁用控件。
+拼接构建器（**不改动为节奏型原子**）：点选 8 种音符值追加，**总时值 ≤ 一个小节（4 拍）**——超出则按钮禁用；实时显示「当前时值 X/4 拍（还差/已满）」；播放直接奏出、仅一遍；清空/删末位；播放期间禁用控件。
 
 ### 其它
 

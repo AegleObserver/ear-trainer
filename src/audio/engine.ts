@@ -3,7 +3,6 @@ import type { PlaybackMode, TimbreId } from '../types'
 
 let synth: Tone.PolySynth | null = null
 let beatSynth: Tone.MembraneSynth | null = null
-let clickSynth: Tone.NoiseSynth | null = null
 let started = false
 let currentTimbre: TimbreId = 'triangle'
 let currentPlayback: PlaybackMode = 'simultaneous'
@@ -93,10 +92,12 @@ export function getPlaybackMode(): PlaybackMode {
 
 /**
  * 打击乐主音单例（节奏型的音符敲击）。
+ * 低频膜音听感偏弱，单独抬高音量使其在节奏中更突出。
  */
 export function getBeatSynth(): Tone.MembraneSynth {
   if (!beatSynth) {
     beatSynth = new Tone.MembraneSynth({
+      volume: 3,
       pitchDecay: 0.02,
       octaves: 2,
       oscillator: { type: 'sine' },
@@ -104,19 +105,6 @@ export function getBeatSynth(): Tone.MembraneSynth {
     }).toDestination()
   }
   return beatSynth
-}
-
-/**
- * 单击参照音单例（节拍器式参考拍）。
- */
-export function getClickSynth(): Tone.NoiseSynth {
-  if (!clickSynth) {
-    clickSynth = new Tone.NoiseSynth({
-      noise: { type: 'white' },
-      envelope: { attack: 0.001, decay: 0.04, sustain: 0 },
-    }).toDestination()
-  }
-  return clickSynth
 }
 
 /**
