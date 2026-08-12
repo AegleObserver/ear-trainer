@@ -20,6 +20,21 @@ export type TimbreId = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'fm'
 export type RhythmVoiceId = 'drum' | TimbreId
 export type PlaybackMode = 'simultaneous' | 'sequential'
 
+export type MinStep = 8 | 16
+
+export interface PlayNote {
+  pitch: number
+  start: number
+  dur: number
+}
+
+export interface PlayTrack {
+  id: string
+  voice: RhythmVoiceId
+  muted: boolean
+  notes: PlayNote[]
+}
+
 export interface UserSettings {
   rootRange: RootRangeId
   pitchKeyMode: PitchKeyMode

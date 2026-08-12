@@ -11,7 +11,7 @@ import SettingsPage from '../pages/SettingsPage'
 const PAGES: PageDef[] = [
   { id: 'test', label: '测试', icon: '🎧', enabled: true },
   { id: 'training', label: '训练场', icon: '🎼', enabled: true },
-  { id: 'play', label: '演奏', icon: '🎹', enabled: false },
+  { id: 'play', label: '演奏', icon: '🎹', enabled: true },
   { id: 'profile', label: '个人中心', icon: '👤', enabled: true },
   { id: 'settings', label: '设置', icon: '⚙️', enabled: true },
 ]
