@@ -87,16 +87,29 @@ export default function PitchGrid({
   const occupiedCells = useMemo(() => {
     const map = new Set<string>()
     for (const n of activeTrack.notes) {
-      for (let i = 0; i < n.dur; i += 1) map.add(`${n.pitch}:${n.start + i}`)
+      // For minStep=8: support half-grid → add both n.start and n.start+0.5 if dur covers it
+      // Simplest: add all positions from start to start+dur-1 with 0.5 step
+      const stepSize = minStep === 8 ? 0.5 : 1
+      for (let i = 0; i < n.dur; i += stepSize) {
+        const pos = n.start + i
+        map.add(`${n.pitch}:${pos.toFixed(1)}`)
+      }
     }
     return map
-  }, [activeTrack])
+  }, [activeTrack, minStep])
 
   const cellFromEvent = (e: React.PointerEvent) => {
     const rect = areaRef.current!.getBoundingClientRect()
-    const x = Math.floor((e.clientX - rect.left) / PLAY_CELL_W)
+    const xPx = e.clientX - rect.left
     const y = Math.floor((e.clientY - rect.top) / PLAY_ROW_H)
-    const step = Math.min(Math.max(x, 0), totalSteps - 1)
+    let step: number
+    if (minStep === 8) {
+      // Snap to half-grid: step = n * 0.5
+      step = Math.round((xPx / (PLAY_CELL_W / 2))) / 2
+    } else {
+      step = Math.round(xPx / PLAY_CELL_W)
+    }
+    step = Math.min(Math.max(step, 0), totalSteps - 1)
     const pitch = Math.min(Math.max(PLAY_PITCH_HI - y, PLAY_PITCH_LO), PLAY_PITCH_HI)
     return { step, pitch }
   }
@@ -106,7 +119,7 @@ export default function PitchGrid({
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
     const { step, pitch } = cellFromEvent(e)
-    if (occupiedCells.has(`${pitch}:${step}`)) {
+    if (occupiedCells.has(`${pitch}:${step.toFixed(1)}`)) {
       const note = activeTrack.notes.find((n) => n.pitch === pitch && n.start <= step && step < n.start + n.dur)
       if (note) onRemoveNote(activeTrackId, note)
       return
@@ -122,7 +135,8 @@ export default function PitchGrid({
 
   const handlePointerUp = () => {
     if (!editable || !drag) return
-    onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + 1 })
+    const stepSize = minStep === 8 ? 0.5 : 1
+    onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + stepSize })
     setDrag(null)
   }
 
