@@ -69,10 +69,17 @@ src/
 │   ├── Feedback.tsx            # 对错反馈 + 音名显示
 │   └── QuizLayout.tsx          # 局内布局组合
 ├── pages/
-│   ├── EarTrainingPage.tsx     # 音感测试
-│   ├── TrainingGroundPage.tsx  # 训练场（根音+音程/和弦发声）
+│   ├── TestPage.tsx            # 测试（音高/节奏滑动切换，右上角）
+│   ├── EarTrainingPage.tsx     # 音感测试（音高子功能）
+│   ├── RhythmTestPage.tsx      # 节奏测试（节奏型识别）
+│   ├── TrainingGroundPage.tsx  # 训练场（音高/节奏滑动切换）
+│   ├── RhythmGroundPage.tsx    # 节奏训练场（拼接构建器）
 │   ├── ProfilePage.tsx         # 个人中心（记录/评级/配置）
-│   └── SettingsPage.tsx        # 设置（页面风格/音色/测试参数）
+│   └── SettingsPage.tsx        # 设置（页面风格/音色/播放方式/测试参数）
+├── components/
+│   ├── SoundDomainToggle.tsx   # 音高🎵/节奏🥁 滑动开关
+│   ├── NoteGlyph.tsx           # 简化音符 SVG（空心/实心/附点/三连音）
+│   └── RhythmPatternView.tsx   # 节奏型记谱（间距按拍数）
 └── types/
     └── index.ts                # 类型定义
 ```
@@ -83,6 +90,9 @@ src/
 export type Mode = 'pitch' | 'interval' | 'chord'
 export type GameMode = 'standard' | 'timed' | 'endless'
 export type GameSessionState = 'playing' | 'finished'
+
+export type SoundDomain = 'pitch' | 'rhythm'   // 音高/节奏 子功能
+export type PlaybackMode = 'simultaneous' | 'sequential'  // 同时播放 / 逐音上行
 
 export interface IntervalDef { name: string; semitones: number }
 export interface ChordDef { name: string; intervals: number[] }
@@ -177,9 +187,55 @@ export interface GameSession {
 - 音频 Promise 会立即 resolve，无法感知实际播完，故用 `setTimeout(1300ms)` 结束 playing 态并解除禁用
 - 底部导航现有 5 个 tab（音感测试/训练场/演奏/个人中心/设置），tab 内边距压缩为 `px-2 sm:px-3` 适配小屏
 
+## 测试与训练场双域模块化 — ✅ 已实现
+
+音感测试/训练场均改为「音高/节奏」双域结构，节奏域已落地为完整功能。
+
+| Tab | 音高域 | 节奏域 |
+|-----|--------|--------|
+| 测试（原音感测试） | `EarTrainingPage`（现有音感测试） | `RhythmTestPage`（节奏型识别） |
+| 训练场 | 现有根音训练内容 | `RhythmGroundPage`（拼接构建器） |
+
+- **切换**：`SoundDomainToggle` 组件（胶囊滑块，音高 🎵 / 节奏 🥁），位于各页**内容区右上角**
+- **状态**：每页独立 `useState<SoundDomain>('pitch')`，不持久化，刷新回默认音高
+- 类型 `SoundDomain = 'pitch' | 'rhythm'`；`PageId` 原 `'ear-training'` 改为 `'test'`
+
+## 节奏模块 — ✅ 已实现
+
+### 时值集 (theory/rhythm.ts)
+
+8 种 `NoteValueDef`（无休止符）：全音符4 / 二分2 / 四分1 / 八分0.5 / 十六分0.25 / 附点四分1.5 / 附点八分0.75 / 八分三连音1/3。
+
+### 出题
+
+- `createRhythmQuestion()`：随机生成 2–4 音、总拍 ≤ 4 的节奏型（`randomPattern()`），产出 4 个两两唯一的记谱选项
+- 复用 `QuizQuestion`：`notes` = 中文时值标签数组（Feedback 可直接读）；`options`/`correctAnswer` = 标签连接串（`四分音符·四分音符`），标签与时值一一对应天然唯一
+- 会话复用 `useGameSession`（`useRhythmTrainer`），记录 `questionType: 'rhythm'`
+
+### 发声 (audio/rhythmPlay.ts)
+
+- `engine.ts` 新增打击乐单例：`getBeatSynth()`（MembraneSynth 主音）、`getClickSynth()`（NoiseSynth 参照单击）
+- `playRhythmQuestion(labels)`：**节拍器参照（1 小节）→ 节奏型 ×2**，按 `Tone.now() + 累计拍偏移` 错时触发；Promise 在总时长后 resolve → `isPlaying` 全程为 true，**选项锁定直至听完**
+- BPM 固定 90（`RHYTHM_BPM` 常量），参照小节/播放遍数由 `RHYTHM_REFERENCE_BARS`/`RHYTHM_PATTERN_PLAYS` 控制
+
+### 记谱渲染
+
+- `NoteGlyph`：简化音符 SVG（空心=二分、实心=四分/八分/十六分、附点、三连音「3」），颜色走 `currentColor` 随主题
+- `RhythmPatternView`：节奏型组件，音符间距 `flexGrow: beats` 按拍数排布
+- `OptionsGrid`/`QuizLayout` 增加可选 `renderOption` prop（向后兼容），节奏测试页传入记谱渲染
+
+### 训练场节奏域 (RhythmGroundPage)
+
+拼接构建器：点选 8 种音符值追加（≤4 音）→ 记谱预览 → 播放（含参照）→ 清空/删末位；播放期间禁用控件。
+
+### 其它
+
+- `Mode` 增加 `'rhythm'`，ProfilePage 记录标签补「节奏」
+- 测试参数（题量/限时）沿用设置；`renderOption` 不影响音高侧
+
 ## 个性化系统 (SettingsPage) — ✅ 已实现
 
-启用底部「设置」Tab，三个可调项（均存入 `UserSettings` 并持久化，旧数据经 `{...DEFAULT, ...raw}` 合并自动补默认值）：
+启用底部「设置」Tab，四个可调项（均存入 `UserSettings` 并持久化，旧数据经 `{...DEFAULT, ...raw}` 合并自动补默认值）：
 
 ### 1. 页面风格 (theme)
 
@@ -203,15 +259,25 @@ export interface GameSession {
 - `useGameSession(createQuestion, mode, playQuestion, config?)` 新增可选 `config: GameSessionConfig`，缺省回退 constants；计时初始化/standard 结束判定/restart 均用 config
 - 三个 trainer hook 从 `settings` 传入；改后对下一局生效
 
+### 4. 播放方式 (playbackMode)
+
+- `PlaybackMode = 'simultaneous' | 'sequential'`，默认 `simultaneous`（= 原和声叠响行为）
+  - **同时播放**：多个音一键叠响（和声效果）
+  - **逐音上行**：按 midi 升序逐个触发（旋律效果），每音时长 0.4s、间隔 0.3s
+- **全局生效**：`playInterval`/`playChord` 读取 `getPlaybackMode()`；音感测试出题播放与训练场即时播放均遵循；单音 `playNote` 不受影响
+- 实现：`engine.ts` 新增 `configurePlayback(mode)`/`getPlaybackMode()` 模块级状态（与 timbre 同源）；`playNotes.ts` 在 sequential 分支用 `Tone.now() + i*0.3` 错时触发；`AppShell` effect 应用 `settings.playbackMode`；`SettingsPage` 新增「播放方式」小节
+
 ## 音频层 (src/audio/playNotes.ts) — ✅ 已实现
 
 基于 `engine.ts` 的 `getSynth()`：
 
 ```ts
 export async function playNote(note: string, duration = 0.6): Promise<void>
-export async function playInterval(note1: string, note2: string): Promise<void>  // 双声部: 两音同时发声
-export async function playChord(notes: string[]): Promise<void>                    // 多音同时发声
+export async function playInterval(note1: string, note2: string): Promise<void>  // 双声部（或逐音上行）
+export async function playChord(notes: string[]): Promise<void>                    // 多音（或逐音上行）
 ```
+
+- `playInterval/playChord` 依据 `getPlaybackMode()` 分两条路径：simultaneous → `triggerAttackRelease([...], 1.2)`；sequential → 按 midi 升序以 `Tone.now()+offset` 逐音触发
 
 - `ensureAudio()` 通过 `Promise.race` 设 1.5s 超时，非手势环境调用不会挂起
 - 每次答题点击时调用 `ensureAudio()`（手势解锁 AudioContext），之后自动播放可正常发声

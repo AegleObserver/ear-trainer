@@ -8,6 +8,7 @@ const QUESTION_TYPE_LABELS: Record<Mode, string> = {
   pitch: '音名',
   interval: '音程',
   chord: '和弦',
+  rhythm: '节奏',
 }
 
 const GAME_MODE_LABELS: Record<GameMode, string> = {

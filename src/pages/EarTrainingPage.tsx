@@ -13,6 +13,7 @@ const MODE_PROMPTS: Record<Mode, string> = {
   pitch: '请选择你听到的音名：',
   interval: '请选择你听到的音程：',
   chord: '请选择你听到的和弦：',
+  rhythm: '请选择你听到的节奏型：',
 }
 
 export default function EarTrainingPage() {

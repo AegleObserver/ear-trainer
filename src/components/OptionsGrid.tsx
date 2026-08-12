@@ -1,9 +1,12 @@
+import type { ReactNode } from 'react'
+
 interface OptionsGridProps {
   options: string[]
   disabled: boolean
   selectedAnswer: string | null
   correctAnswer: string | null
   onSelect: (option: string) => void
+  renderOption?: (option: string) => ReactNode
 }
 
 export default function OptionsGrid({
@@ -12,6 +15,7 @@ export default function OptionsGrid({
   selectedAnswer,
   correctAnswer,
   onSelect,
+  renderOption,
 }: OptionsGridProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -33,7 +37,7 @@ export default function OptionsGrid({
             disabled={disabled}
             className={`rounded-xl border px-4 py-3 font-medium transition-colors ${className}`}
           >
-            {opt}
+            {renderOption ? renderOption(opt) : opt}
           </button>
         )
       })}

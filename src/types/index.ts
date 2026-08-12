@@ -1,4 +1,6 @@
-export type PageId = 'ear-training' | 'training' | 'play' | 'settings' | 'profile'
+export type PageId = 'test' | 'training' | 'play' | 'settings' | 'profile'
+
+export type SoundDomain = 'pitch' | 'rhythm'
 
 export interface PageDef {
   id: PageId
@@ -7,7 +9,7 @@ export interface PageDef {
   enabled: boolean
 }
 
-export type Mode = 'pitch' | 'interval' | 'chord'
+export type Mode = 'pitch' | 'interval' | 'chord' | 'rhythm'
 export type GameMode = 'standard' | 'timed' | 'endless'
 export type GameSessionState = 'playing' | 'finished'
 
@@ -15,6 +17,7 @@ export type RootRangeId = 'low' | 'mid' | 'high' | 'full'
 export type PitchKeyMode = 'white' | 'all'
 export type ThemeId = 'dark-cyan' | 'light' | 'dark-violet' | 'dark-amber'
 export type TimbreId = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'fm'
+export type PlaybackMode = 'simultaneous' | 'sequential'
 
 export interface UserSettings {
   rootRange: RootRangeId
@@ -23,6 +26,7 @@ export interface UserSettings {
   enabledChords: string[]
   theme: ThemeId
   timbre: TimbreId
+  playbackMode: PlaybackMode
   standardCount: number
   timedLimitSeconds: number
 }

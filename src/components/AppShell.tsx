@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
-import { configureSynth, setVolume } from '../audio/engine'
+import { configurePlayback, configureSynth, setVolume } from '../audio/engine'
 import { useAppData } from '../context/AppDataContext'
 import type { PageDef, PageId } from '../types'
-import EarTrainingPage from '../pages/EarTrainingPage'
+import TestPage from '../pages/TestPage'
 import TrainingGroundPage from '../pages/TrainingGroundPage'
 import PlayPage from '../pages/PlayPage'
 import ProfilePage from '../pages/ProfilePage'
 import SettingsPage from '../pages/SettingsPage'
 
 const PAGES: PageDef[] = [
-  { id: 'ear-training', label: '音感测试', icon: '🎧', enabled: true },
+  { id: 'test', label: '测试', icon: '🎧', enabled: true },
   { id: 'training', label: '训练场', icon: '🎼', enabled: true },
   { id: 'play', label: '演奏', icon: '🎹', enabled: false },
   { id: 'profile', label: '个人中心', icon: '👤', enabled: true },
@@ -36,6 +36,10 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
   useEffect(() => {
     configureSynth(settings.timbre)
   }, [settings.timbre])
+
+  useEffect(() => {
+    configurePlayback(settings.playbackMode)
+  }, [settings.playbackMode])
 
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value)
@@ -83,7 +87,7 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        {activePage === 'ear-training' && <EarTrainingPage />}
+        {activePage === 'test' && <TestPage />}
         {activePage === 'training' && <TrainingGroundPage />}
         {activePage === 'play' && <PlayPage />}
         {activePage === 'profile' && <ProfilePage />}

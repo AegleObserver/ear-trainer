@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { GameSession } from '../types'
 import Feedback from './Feedback'
 import OptionsGrid from './OptionsGrid'
@@ -7,9 +8,10 @@ import SessionStatusBar from './SessionStatusBar'
 interface QuizLayoutProps {
   session: GameSession
   prompt: string
+  renderOption?: (option: string) => ReactNode
 }
 
-export default function QuizLayout({ session, prompt }: QuizLayoutProps) {
+export default function QuizLayout({ session, prompt, renderOption }: QuizLayoutProps) {
   const { question, lastResult } = session
 
   return (
@@ -30,6 +32,7 @@ export default function QuizLayout({ session, prompt }: QuizLayoutProps) {
             selectedAnswer={lastResult?.chosen ?? null}
             correctAnswer={lastResult ? question.correctAnswer : null}
             onSelect={session.submitAnswer}
+            renderOption={renderOption}
           />
           <Feedback
             result={lastResult}

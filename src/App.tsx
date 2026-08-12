@@ -4,7 +4,7 @@ import { AppDataProvider } from './context/AppDataContext'
 import type { PageId } from './types'
 
 export default function App() {
-  const [activePage, setActivePage] = useState<PageId>('ear-training')
+  const [activePage, setActivePage] = useState<PageId>('test')
 
   return (
     <AppDataProvider>

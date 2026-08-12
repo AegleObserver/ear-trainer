@@ -1,9 +1,12 @@
 import * as Tone from 'tone'
-import type { TimbreId } from '../types'
+import type { PlaybackMode, TimbreId } from '../types'
 
 let synth: Tone.PolySynth | null = null
+let beatSynth: Tone.MembraneSynth | null = null
+let clickSynth: Tone.NoiseSynth | null = null
 let started = false
 let currentTimbre: TimbreId = 'triangle'
+let currentPlayback: PlaybackMode = 'simultaneous'
 
 const UNLOCK_TIMEOUT_MS = 1500
 
@@ -72,6 +75,48 @@ export function configureSynth(timbre: TimbreId): void {
     synth.dispose()
     synth = null
   }
+}
+
+/**
+ * 设置多音播放方式（同时叠响 / 逐音上行）。
+ */
+export function configurePlayback(mode: PlaybackMode): void {
+  currentPlayback = mode
+}
+
+/**
+ * 当前多音播放方式。
+ */
+export function getPlaybackMode(): PlaybackMode {
+  return currentPlayback
+}
+
+/**
+ * 打击乐主音单例（节奏型的音符敲击）。
+ */
+export function getBeatSynth(): Tone.MembraneSynth {
+  if (!beatSynth) {
+    beatSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.02,
+      octaves: 2,
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.001, decay: 0.1, sustain: 0 },
+    }).toDestination()
+  }
+  return beatSynth
+}
+
+/**
+ * 单击参照音单例（节拍器式参考拍）。
+ */
+export function getClickSynth(): Tone.NoiseSynth {
+  if (!clickSynth) {
+    clickSynth = new Tone.NoiseSynth({
+      noise: { type: 'white' },
+      envelope: { attack: 0.001, decay: 0.04, sustain: 0 },
+    }).toDestination()
+  }
+  return clickSynth
 }
 
 /**

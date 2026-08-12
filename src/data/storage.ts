@@ -1,4 +1,4 @@
-import type { QuizRecord, RootRangeId, ThemeId, TimbreId, UserSettings } from '../types'
+import type { PlaybackMode, QuizRecord, RootRangeId, ThemeId, TimbreId, UserSettings } from '../types'
 
 export const ROOT_RANGES: Record<RootRangeId, { label: string; lo: number; hi: number }> = {
   low: { label: '低音区 C3–B3', lo: 48, hi: 59 },
@@ -22,6 +22,11 @@ export const TIMBRES: Record<TimbreId, { label: string; description: string }> =
   fm: { label: '电子 FM', description: 'FM 调制音色，金属质感' },
 }
 
+export const PLAYBACK_MODES: Record<PlaybackMode, { label: string; description: string }> = {
+  simultaneous: { label: '同时播放', description: '多个音同时叠响（和声效果）' },
+  sequential: { label: '逐音上行', description: '按音高从低到高逐个播放（旋律效果）' },
+}
+
 export const STANDARD_COUNT_OPTIONS = [5, 10, 20, 30]
 
 export const TIMED_LIMIT_OPTIONS = [60, 120, 180, 300]
@@ -33,6 +38,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   enabledChords: [],
   theme: 'dark-cyan',
   timbre: 'triangle',
+  playbackMode: 'simultaneous',
   standardCount: 20,
   timedLimitSeconds: 120,
 }

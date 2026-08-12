@@ -1,6 +1,6 @@
 import { useAppData } from '../context/AppDataContext'
-import { STANDARD_COUNT_OPTIONS, THEMES, TIMBRES, TIMED_LIMIT_OPTIONS } from '../data/storage'
-import type { ThemeId, TimbreId } from '../types'
+import { PLAYBACK_MODES, STANDARD_COUNT_OPTIONS, THEMES, TIMBRES, TIMED_LIMIT_OPTIONS } from '../data/storage'
+import type { PlaybackMode, ThemeId, TimbreId } from '../types'
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useAppData()
@@ -61,6 +61,32 @@ export default function SettingsPage() {
                 />
                 <span className="font-medium">{TIMBRES[id].label}</span>
                 <span className="text-xs text-slate-500">{TIMBRES[id].description}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="mb-3 font-semibold">播放方式</h3>
+          <div className="flex flex-col gap-2">
+            {(Object.keys(PLAYBACK_MODES) as PlaybackMode[]).map((id) => (
+              <label
+                key={id}
+                className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  settings.playbackMode === id
+                    ? 'border-cyan-500 bg-cyan-500/10 text-cyan-300'
+                    : 'border-slate-700 text-slate-300 hover:border-slate-500'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="playback"
+                  checked={settings.playbackMode === id}
+                  onChange={() => updateSettings({ playbackMode: id })}
+                  className="accent-cyan-400"
+                />
+                <span className="font-medium">{PLAYBACK_MODES[id].label}</span>
+                <span className="text-xs text-slate-500">{PLAYBACK_MODES[id].description}</span>
               </label>
             ))}
           </div>
