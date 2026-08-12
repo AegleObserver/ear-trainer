@@ -91,11 +91,21 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        {activePage === 'test' && <TestPage />}
-        {activePage === 'training' && <TrainingGroundPage />}
-        {activePage === 'play' && <PlayPage />}
-        {activePage === 'profile' && <ProfilePage />}
-        {activePage === 'settings' && <SettingsPage />}
+        <div className={activePage === 'test' ? '' : 'hidden'}>
+          <TestPage />
+        </div>
+        <div className={activePage === 'training' ? '' : 'hidden'}>
+          <TrainingGroundPage />
+        </div>
+        <div className={activePage === 'play' ? '' : 'hidden'}>
+          <PlayPage />
+        </div>
+        <div className={activePage === 'profile' ? '' : 'hidden'}>
+          <ProfilePage />
+        </div>
+        <div className={activePage === 'settings' ? '' : 'hidden'}>
+          <SettingsPage />
+        </div>
       </main>
 
       {/* Bottom tabs */}
