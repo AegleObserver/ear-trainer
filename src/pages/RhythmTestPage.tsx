@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import GameModeSelector from '../components/GameModeSelector'
 import QuizLayout from '../components/QuizLayout'
-import ResultsScreen from '../components/ResultsScreen'
 import RhythmPatternView from '../components/RhythmPatternView'
 import { useAppData } from '../context/AppDataContext'
 import { useRhythmTrainer } from '../hooks/useRhythmTrainer'
@@ -42,10 +41,6 @@ function SessionPanel({ gameMode }: { gameMode: GameMode }) {
       savedRef.current = false
     }
   }, [session.state, session.stats, session.mode, addRecord])
-
-  if (session.state === 'finished') {
-    return <ResultsScreen mode={session.mode} stats={session.stats} onRestart={session.restart} />
-  }
 
   return (
     <QuizLayout

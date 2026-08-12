@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import GameModeSelector from '../components/GameModeSelector'
 import ModeTabs from '../components/ModeTabs'
 import QuizLayout from '../components/QuizLayout'
-import ResultsScreen from '../components/ResultsScreen'
 import { useAppData } from '../context/AppDataContext'
 import { useChordTrainer } from '../hooks/useChordTrainer'
 import { useIntervalTrainer } from '../hooks/useIntervalTrainer'
@@ -59,10 +58,6 @@ function SessionPanel({ questionType, gameMode }: { questionType: Mode; gameMode
       savedRef.current = false
     }
   }, [session.state, session.stats, session.mode, questionType, addRecord])
-
-  if (session.state === 'finished') {
-    return <ResultsScreen mode={session.mode} stats={session.stats} onRestart={session.restart} />
-  }
 
   return <QuizLayout session={session} prompt={MODE_PROMPTS[questionType]} />
 }

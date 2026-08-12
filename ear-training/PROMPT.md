@@ -31,7 +31,7 @@ f(n) = 440 × 2^((n − 69) / 12)
 - 三种玩法共用**同一全量题目池**（无难度分级）
 - 每局独立结算：答对 X / 共 Y · 准确率% + "再来一局"
 - 答题后显示反馈（含正确音名）约 1.5 秒，随后自动切下一题
-- 结算界面在 `state === 'finished'` 时替代局内界面
+- 结算界面在 `state === 'finished'` 时**追加在局内界面下方**（不替换局内 UI，最后一题的对错反馈与结算同屏可见）
 - 切换玩法或题型 → 重新开局（`key={`${questionType}:${gameMode}`}` 重挂载）
 - 配置常量位于 `src/constants/gameConfig.ts`：
   - `STANDARD_QUESTION_COUNT = 20`
@@ -200,6 +200,14 @@ export interface GameSession {
 - **状态**：每页独立 `useState<SoundDomain>('pitch')`，不持久化，刷新回默认音高
 - 类型 `SoundDomain = 'pitch' | 'rhythm'`；`PageId` 原 `'ear-training'` 改为 `'test'`
 
+## 多 Tab 常驻挂载（切换保留状态） — ✅ 已实现
+
+`AppShell` 的 `<main>` 内全部页面**常驻挂载**，用 `hidden` 类按 `activePage` 显隐（不再条件渲染卸载）：
+
+- 切换 Tab 不卸载页面 → 组件级状态全部保留（测试会话进度/当前题/答对统计、训练场根音与勾选、节奏拼接图案、音高/节奏域等），切回原样
+- 隐藏页定时器自然继续运行（限时倒计时、播放高亮等），符合"记忆不做更改"语义
+- 常驻隐藏页不产生噪音：测试页首题需手势解锁音频，不自动发声
+
 ## 节奏模块 — ✅ 已实现
 
 ### 时值集 (theory/rhythm.ts)
@@ -346,8 +354,8 @@ export async function playChord(notes: string[]): Promise<void>                 
 标题 + ModeTabs (题型)
 GameModeSelector (玩法, 页面级, 切换即重开)
 SessionPanel (key={`${questionType}:${gameMode}`})
-├── state === 'finished' → ResultsScreen
-└── 否则 → QuizLayout (SessionStatusBar + PlayArea + OptionsGrid + Feedback)
+└── 始终渲染 QuizLayout (SessionStatusBar + PlayArea + OptionsGrid + Feedback)
+    └── state === 'finished' → QuizLayout 末尾追加 ResultsScreen（不替换局内 UI）
 ```
 
 ### SessionStatusBar
@@ -359,12 +367,12 @@ SessionPanel (key={`${questionType}:${gameMode}`})
 ### ResultsScreen
 
 - 玩法结束说明（已完成 20 题 / 时间到 / 已手动结束）
-- 答对 / 共答 / 准确率% 三列
-- `[再来一局]` 按钮 → `restart()`
+- 答对 / 共答 / 准确率% 三列（不含按钮，重开入口由 PlayArea 的「重新挑战」承担）
 
 ### PlayArea
 
 - 大按钮 `▶ 播放题目`（`isPlaying` 时显示 `⏳ 播放中…` 并禁用）
+- 会话结束（`finished`）时按钮变为 `🔁 重新挑战`，点击重开一局（`session.restart`）
 - 不再显示音符预览文本
 
 ### OptionsGrid / Feedback

@@ -4,10 +4,9 @@ import type { GameMode, QuizStats } from '../types'
 interface ResultsScreenProps {
   mode: GameMode
   stats: QuizStats
-  onRestart: () => void
 }
 
-export default function ResultsScreen({ mode, stats, onRestart }: ResultsScreenProps) {
+export default function ResultsScreen({ mode, stats }: ResultsScreenProps) {
   const { settings } = useAppData()
   const MODE_FINISH_NOTES: Record<GameMode, string> = {
     standard: `已完成 ${settings.standardCount} 题`,
@@ -37,10 +36,6 @@ export default function ResultsScreen({ mode, stats, onRestart }: ResultsScreenP
           </p>
         </div>
       </div>
-
-      <button type="button" onClick={onRestart} className="btn-primary">
-        再来一局
-      </button>
     </div>
   )
 }
