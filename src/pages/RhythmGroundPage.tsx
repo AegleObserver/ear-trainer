@@ -4,8 +4,13 @@ import RhythmPatternView from '../components/RhythmPatternView'
 import { NOTE_VALUES, NOTE_VALUE_BY_ID, patternToLabel } from '../theory/rhythm'
 import type { NoteValueId } from '../theory/rhythm'
 
-const MAX_NOTES = 4
 const MAX_BEATS = 4
+
+function formatBeats(b: number): string {
+  if (b === 1 / 3) return '1/3'
+  const rounded = Math.round(b * 100) / 100
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2)
+}
 
 export default function RhythmGroundPage() {
   const [pattern, setPattern] = useState<NoteValueId[]>([])
@@ -13,7 +18,6 @@ export default function RhythmGroundPage() {
   const playingRef = useRef(false)
 
   const labels = pattern.map((id) => NOTE_VALUE_BY_ID[id].label)
-  const full = pattern.length >= MAX_NOTES
   const beats = useMemo(
     () => pattern.reduce((sum, id) => sum + NOTE_VALUE_BY_ID[id].beats, 0),
     [pattern],
@@ -32,7 +36,7 @@ export default function RhythmGroundPage() {
   }, [labels, pattern.length])
 
   const append = (id: NoteValueId) => {
-    if (playing || full) return
+    if (playing) return
     const beatsToAdd = NOTE_VALUE_BY_ID[id].beats
     setPattern((p) => {
       const sum = p.reduce((acc, pid) => acc + NOTE_VALUE_BY_ID[pid].beats, 0)
@@ -51,7 +55,7 @@ export default function RhythmGroundPage() {
     setPattern([])
   }
 
-  const canAdd = (beatsToAdd: number) => !playing && !full && beats + beatsToAdd <= MAX_BEATS
+  const canAdd = (beatsToAdd: number) => !playing && beats + beatsToAdd <= MAX_BEATS
 
   return (
     <div className="flex flex-col gap-4">
@@ -94,7 +98,7 @@ export default function RhythmGroundPage() {
         )}
 
         <p className="text-center text-xs text-slate-500">
-          当前时值 {beats} / {MAX_BEATS} 拍{beats >= MAX_BEATS ? '（已满一个小节）' : `（还差 ${MAX_BEATS - beats} 拍）`}
+          当前时值 {formatBeats(beats)} / {MAX_BEATS} 拍{beats >= MAX_BEATS ? '（已满一个小节）' : `（还差 ${formatBeats(MAX_BEATS - beats)} 拍）`}
         </p>
 
         <button
@@ -125,7 +129,7 @@ export default function RhythmGroundPage() {
                 }`}
               >
                 <span>{v.label}</span>
-                <span className="text-xs text-slate-500">{v.beats} 拍</span>
+                <span className="text-xs text-slate-500">{formatBeats(v.beats)} 拍</span>
               </button>
             )
           })}
