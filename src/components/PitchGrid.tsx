@@ -15,8 +15,11 @@ interface PitchGridProps {
   tracks: PlayTrack[]
   activeTrackId: string
   minStep: MinStep
+  startTick: number
+  editable: boolean
   onAddNote: (trackId: string, note: PlayNote) => void
   onRemoveNote: (trackId: string, note: PlayNote) => void
+  onSetStartTick: (tick: number) => void
 }
 
 interface DragState {
@@ -29,8 +32,11 @@ export default function PitchGrid({
   tracks,
   activeTrackId,
   minStep,
+  startTick,
+  editable,
   onAddNote,
   onRemoveNote,
+  onSetStartTick,
 }: PitchGridProps) {
   const stepsPerBeat = minStep / 4
   const stepsPerBar = PLAY_BEATS_PER_BAR * stepsPerBeat
@@ -92,6 +98,7 @@ export default function PitchGrid({
   }
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (!editable) return
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
     const { step, pitch } = cellFromEvent(e)
@@ -104,13 +111,13 @@ export default function PitchGrid({
   }
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!drag) return
+    if (!editable || !drag) return
     const { step } = cellFromEvent(e)
     setDrag((d) => (d ? { ...d, end: Math.max(d.start, Math.min(step, totalSteps - 1)) } : d))
   }
 
   const handlePointerUp = () => {
-    if (!drag) return
+    if (!editable || !drag) return
     onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + 1 })
     setDrag(null)
   }
@@ -142,9 +149,17 @@ export default function PitchGrid({
               style={{ width }}
             >
               {Array.from({ length: PLAY_BAR_COUNT }, (_, bar) => (
-                <div key={bar} className="flex items-center pl-1" style={{ width: stepsPerBar * PLAY_CELL_W }}>
+                <button
+                  key={bar}
+                  type="button"
+                  onClick={() => onSetStartTick(bar * stepsPerBar)}
+                  disabled={!editable}
+                  title="点击设为播放起点"
+                  className="flex h-full cursor-pointer items-center pl-1 text-left transition-colors hover:bg-cyan-500/10 hover:text-cyan-300 disabled:cursor-not-allowed"
+                  style={{ width: stepsPerBar * PLAY_CELL_W }}
+                >
                   小节 {bar + 1}
-                </div>
+                </button>
               ))}
             </div>
             <div
@@ -157,6 +172,13 @@ export default function PitchGrid({
               onPointerCancel={handlePointerCancel}
             >
               <div className="absolute inset-0" style={{ backgroundImage: gridBackground }} />
+              {startTick > 0 && (
+                <div
+                  className="absolute bottom-0 top-0 z-10 w-0.5 bg-rose-400/80"
+                  style={{ left: startTick * PLAY_CELL_W }}
+                  title={`播放起点 ${startTick}`}
+                />
+              )}
               {notes.map((n) => (
                 <div
                   key={n.key}

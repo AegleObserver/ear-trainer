@@ -5,23 +5,41 @@ import type { MinStep } from '../types'
 interface PlayStatusBarProps {
   bpm: number
   minStep: MinStep
+  startTick: number
   canUndo: boolean
   canRedo: boolean
+  locked: boolean
+  isPlaying: boolean
+  isPaused: boolean
   onBpmChange: (bpm: number) => void
   onMinStepChange: (step: MinStep) => void
   onUndo: () => void
   onRedo: () => void
+  onResetStartTick: () => void
+  onPlay: () => void
+  onPause: () => void
+  onResume: () => void
+  onStop: () => void
 }
 
 export default function PlayStatusBar({
   bpm,
   minStep,
+  startTick,
   canUndo,
   canRedo,
+  locked,
+  isPlaying,
+  isPaused,
   onBpmChange,
   onMinStepChange,
   onUndo,
   onRedo,
+  onResetStartTick,
+  onPlay,
+  onPause,
+  onResume,
+  onStop,
 }: PlayStatusBarProps) {
   const [bpmInput, setBpmInput] = useState(String(bpm))
 
@@ -78,7 +96,8 @@ export default function PlayStatusBar({
               key={p}
               type="button"
               onClick={() => onBpmChange(p)}
-              className={`rounded-md border px-2 py-1 text-xs transition-colors ${
+              disabled={locked}
+              className={`rounded-md border px-2 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 bpm === p
                   ? 'border-cyan-500 bg-cyan-500/10 text-cyan-300'
                   : 'border-slate-700 text-slate-300 hover:border-slate-500'
@@ -96,7 +115,8 @@ export default function PlayStatusBar({
             value={bpmInput}
             onChange={(e) => handleBpmChange(e.target.value)}
             onBlur={handleBpmBlur}
-            className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-cyan-500"
+            disabled={locked}
+            className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-40"
           />
           <span className="text-xs text-slate-500">BPM（60–240）</span>
         </label>
@@ -110,7 +130,8 @@ export default function PlayStatusBar({
               key={s}
               type="button"
               onClick={() => onMinStepChange(s)}
-              className={`px-3 py-1.5 text-sm transition-colors ${
+              disabled={locked}
+              className={`px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 minStep === s ? 'bg-cyan-500/10 font-medium text-cyan-300' : 'text-slate-300 hover:bg-slate-800'
               }`}
             >
@@ -119,11 +140,74 @@ export default function PlayStatusBar({
           ))}
         </div>
       </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-slate-400">起点</span>
+        <span className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300" title="播放起点（格）">
+          {startTick}
+        </span>
+        <button
+          type="button"
+          onClick={onResetStartTick}
+          disabled={startTick === 0 || locked}
+          title="将播放起点复位到开头"
+          className="rounded-lg border border-slate-700 px-2 py-1 text-xs text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ↺ 复位
+        </button>
+      </div>
+
+      <div className="flex items-center gap-1">
+        {isPlaying ? (
+          <>
+            <button
+              type="button"
+              onClick={onPause}
+              className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/60"
+            >
+              ⏸ 暂停
+            </button>
+            <button
+              type="button"
+              onClick={onStop}
+              className="rounded-lg border border-rose-500/50 px-3 py-1.5 text-sm text-rose-300 transition-colors hover:bg-rose-500/10"
+            >
+              ⏹ 停止
+            </button>
+          </>
+        ) : isPaused ? (
+          <>
+            <button
+              type="button"
+              onClick={onResume}
+              className="rounded-lg border border-cyan-500/50 px-3 py-1.5 text-sm text-cyan-300 transition-colors hover:bg-cyan-500/10"
+            >
+              ▶ 继续
+            </button>
+            <button
+              type="button"
+              onClick={onStop}
+              className="rounded-lg border border-rose-500/50 px-3 py-1.5 text-sm text-rose-300 transition-colors hover:bg-rose-500/10"
+            >
+              ⏹ 停止
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={onPlay}
+            className="rounded-lg bg-cyan-500 px-4 py-1.5 text-sm font-medium text-slate-950 transition-colors hover:bg-cyan-400"
+          >
+            ▶ 播放
+          </button>
+        )}
+      </div>
+
       <div className="ml-auto flex items-center gap-1">
         <button
           type="button"
           onClick={onUndo}
-          disabled={!canUndo}
+          disabled={!canUndo || locked}
           title="撤回（仅网格音符编辑）"
           className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -132,7 +216,7 @@ export default function PlayStatusBar({
         <button
           type="button"
           onClick={onRedo}
-          disabled={!canRedo}
+          disabled={!canRedo || locked}
           title="恢复（仅网格音符编辑）"
           className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-40"
         >

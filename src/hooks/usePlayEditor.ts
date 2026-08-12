@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PLAY_BPM_DEFAULT, PLAY_BPM_MAX, PLAY_BPM_MIN, PLAY_MIN_STEP_DEFAULT } from '../constants/playConfig'
+import { playSequence, type PlaybackHandle } from '../audio/playSequence'
+import {
+  PLAY_BAR_COUNT,
+  PLAY_BEATS_PER_BAR,
+  PLAY_BPM_DEFAULT,
+  PLAY_BPM_MAX,
+  PLAY_BPM_MIN,
+  PLAY_MIN_STEP_DEFAULT,
+} from '../constants/playConfig'
 import type { MinStep, PlayNote, PlayTrack, RhythmVoiceId } from '../types'
 
 const INITIAL_TRACKS: PlayTrack[] = [{ id: 'track-1', voice: 'triangle', muted: false, notes: [] }]
@@ -17,6 +25,29 @@ export default function usePlayEditor() {
   useEffect(() => {
     tracksRef.current = tracks
   }, [tracks])
+
+  const bpmRef = useRef(bpm)
+  useEffect(() => {
+    bpmRef.current = bpm
+  }, [bpm])
+
+  const minStepRef = useRef(minStep)
+  useEffect(() => {
+    minStepRef.current = minStep
+  }, [minStep])
+
+  const totalSteps = PLAY_BAR_COUNT * PLAY_BEATS_PER_BAR * (minStep / 4)
+
+  const [startTick, setStartTickState] = useState(0)
+  const startTickRef = useRef(startTick)
+  useEffect(() => {
+    startTickRef.current = startTick
+  }, [startTick])
+
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const playingRef = useRef(false)
+  const handleRef = useRef<PlaybackHandle | null>(null)
 
   const undoStack = useRef<PlayTrack[][]>([])
   const redoStack = useRef<PlayTrack[][]>([])
@@ -120,12 +151,70 @@ export default function usePlayEditor() {
     [updateTrack],
   )
 
+  const setStartTick = useCallback(
+    (tick: number) => {
+      const clamped = Math.max(0, Math.min(Math.round(tick), totalSteps - 1))
+      setStartTickState(clamped)
+    },
+    [totalSteps],
+  )
+
+  const play = useCallback(async () => {
+    if (playingRef.current || handleRef.current) return
+    playingRef.current = true
+    setIsPlaying(true)
+    setIsPaused(false)
+    const handle = await playSequence(tracksRef.current, {
+      bpm: bpmRef.current,
+      minStep: minStepRef.current,
+      startTick: startTickRef.current,
+    })
+    if (!playingRef.current) {
+      handle.stop()
+      return
+    }
+    handleRef.current = handle
+    handle.promise.finally(() => {
+      playingRef.current = false
+      setIsPlaying(false)
+      setIsPaused(false)
+      handleRef.current = null
+    })
+  }, [])
+
+  const pausePlayback = useCallback(() => {
+    if (!playingRef.current || !handleRef.current) return
+    handleRef.current.pause()
+    setIsPaused(true)
+  }, [])
+
+  const resumePlayback = useCallback(() => {
+    if (!handleRef.current) return
+    handleRef.current.resume()
+    setIsPaused(false)
+  }, [])
+
+  const stopPlayback = useCallback(() => {
+    playingRef.current = false
+    handleRef.current?.stop()
+    handleRef.current = null
+    setIsPlaying(false)
+    setIsPaused(false)
+  }, [])
+
+  const locked = isPlaying || isPaused
+
   return {
     tracks,
     activeTrack,
     activeTrackId,
     bpm,
     minStep,
+    totalSteps,
+    startTick,
+    isPlaying,
+    isPaused,
+    locked,
     canUndo,
     canRedo,
     setBpm,
@@ -139,5 +228,10 @@ export default function usePlayEditor() {
     selectTrack,
     setTrackVoice,
     toggleTrackMuted,
+    setStartTick,
+    play,
+    pausePlayback,
+    resumePlayback,
+    stopPlayback,
   }
 }
