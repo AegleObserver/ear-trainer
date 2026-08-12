@@ -1,4 +1,4 @@
-import { STANDARD_QUESTION_COUNT } from '../constants/gameConfig'
+import { useAppData } from '../context/AppDataContext'
 import type { GameMode, QuizStats } from '../types'
 
 function formatTime(seconds: number): string {
@@ -15,6 +15,7 @@ interface SessionStatusBarProps {
 }
 
 export default function SessionStatusBar({ mode, stats, timeRemaining, onStop }: SessionStatusBarProps) {
+  const { settings } = useAppData()
   return (
     <div className="panel flex items-center justify-between gap-4 p-4">
       <div className="flex items-center gap-6">
@@ -23,7 +24,7 @@ export default function SessionStatusBar({ mode, stats, timeRemaining, onStop }:
             <div>
               <p className="text-xs text-slate-500">题目进度</p>
               <p className="text-lg font-bold">
-                {stats.total} / {STANDARD_QUESTION_COUNT}
+                {stats.total} / {settings.standardCount}
               </p>
             </div>
             <div>

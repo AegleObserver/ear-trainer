@@ -1,4 +1,4 @@
-import { STANDARD_QUESTION_COUNT } from '../constants/gameConfig'
+import { useAppData } from '../context/AppDataContext'
 import type { GameMode, QuizStats } from '../types'
 
 interface ResultsScreenProps {
@@ -7,13 +7,13 @@ interface ResultsScreenProps {
   onRestart: () => void
 }
 
-const MODE_FINISH_NOTES: Record<GameMode, string> = {
-  standard: `已完成 ${STANDARD_QUESTION_COUNT} 题`,
-  timed: '时间到，本局结束',
-  endless: '已手动结束本局',
-}
-
 export default function ResultsScreen({ mode, stats, onRestart }: ResultsScreenProps) {
+  const { settings } = useAppData()
+  const MODE_FINISH_NOTES: Record<GameMode, string> = {
+    standard: `已完成 ${settings.standardCount} 题`,
+    timed: '时间到，本局结束',
+    endless: '已手动结束本局',
+  }
   const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
 
   return (

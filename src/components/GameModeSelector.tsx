@@ -1,10 +1,9 @@
+import { useAppData } from '../context/AppDataContext'
 import type { GameMode } from '../types'
 
-const GAME_MODES: { id: GameMode; label: string; hint: string }[] = [
-  { id: 'standard', label: '标准', hint: '共 20 题' },
-  { id: 'timed', label: '限时', hint: '2 分钟' },
-  { id: 'endless', label: '无限', hint: '自由作答' },
-]
+function formatLimit(seconds: number): string {
+  return seconds >= 60 ? `${seconds / 60} 分钟` : `${seconds} 秒`
+}
 
 interface GameModeSelectorProps {
   mode: GameMode
@@ -12,6 +11,12 @@ interface GameModeSelectorProps {
 }
 
 export default function GameModeSelector({ mode, onChange }: GameModeSelectorProps) {
+  const { settings } = useAppData()
+  const GAME_MODES: { id: GameMode; label: string; hint: string }[] = [
+    { id: 'standard', label: '标准', hint: `共 ${settings.standardCount} 题` },
+    { id: 'timed', label: '限时', hint: formatLimit(settings.timedLimitSeconds) },
+    { id: 'endless', label: '无限', hint: '自由作答' },
+  ]
   return (
     <div className="flex items-center justify-center gap-2">
       <span className="text-sm text-slate-500">玩法</span>
