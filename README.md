@@ -14,7 +14,7 @@ App (activePage state)
    └─ AppShell              # Header + 常驻挂载的 5 个页面(hidden 显隐) + 底部 Tab
       ├─ TestPage           # 测试：音高域 EarTrainingPage / 节奏域 RhythmTestPage
       ├─ TrainingGroundPage # 训练场：音高域 / 节奏域 RhythmGroundPage
-      ├─ PlayPage           # 演奏（开发中，Tab disabled）
+      ├─ PlayPage           # 演奏：网格编辑器+播放（3/4 拍、缩放、导出规划中）
       ├─ ProfilePage        # 个人中心：记录/评级/考察配置
       └─ SettingsPage       # 设置：主题/音色/播放方式/测试参数/节奏音色+BPM
 ```
@@ -40,7 +40,7 @@ App (activePage state)
 | `src/data/` | localStorage 读写 + 根音区间 + 评级 |
 | `src/types/` | 全部类型定义（改动从这儿开始对齐） |
 
-`app-framework/PROMPT.md` 与 `ear-training/PROMPT.md` 是分阶段构建的功能规格与设计决策文档，新功能追加时在其中记录（含 ✅ 已实现 标记），是理解现状的最佳入口。
+`app-framework/PROMPT.md`、`ear-training/PROMPT.md` 与 `play/PROMPT.md` 是分阶段构建的功能规格与设计决策文档，新功能追加时在其中记录（含 ✅ 已实现 标记），是理解现状的最佳入口。
 
 ## 功能规划
 
@@ -52,7 +52,8 @@ App (activePage state)
 - [x] 个人中心：最近记录 · 参与次数 · 评级 · 考察配置（根音区间/键位/音程/和弦池）
 - [x] 训练场：自定义根音（音名+八度），点击音程/和弦即时发声，未勾选仅播放根音
 - [x] 设置：页面风格 4 主题 · 音色 5 档 · 播放方式（同时/逐音上行）· 标准题量/限时时长 · 节奏音色（鼓/5 档 A4 乐音）· 速度 BPM（60–200 可自定义）
-- [ ] 演奏：步进音序器 + 打击垫 + 电子音色
+- [x] 演奏：网格多轨编辑器（纵=音高/横=时间、步进放置、多声部、起点起播，复用节奏型测试音色池）
+- [ ] 演奏进阶：3/4 拍号 · 横纵轴缩放 · MP3/WAV 导出（规划中）
 - [ ] 调性识别（规划中）
 
 ## 开发
