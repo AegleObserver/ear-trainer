@@ -44,7 +44,6 @@ export default function PitchGrid({
   const rowCount = PLAY_PITCH_HI - PLAY_PITCH_LO + 1
   const width = totalSteps * PLAY_CELL_W
   const height = rowCount * PLAY_ROW_H
-  const stepSize = minStep === 8 ? 0.5 : 1
 
   const areaRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -85,29 +84,20 @@ export default function PitchGrid({
     [tracks, activeTrackId],
   )
 
-  const occupiedCells = useMemo(() => {
-    const map = new Set<string>()
-    for (const n of activeTrack.notes) {
-      // For minStep=8: support half-grid → add all positions from start to start+dur with 0.5 step
-      for (let i = 0; i < n.dur; i += stepSize) {
-        const pos = n.start + i
-        map.add(`${n.pitch}:${pos.toFixed(1)}`)
-      }
-    }
-    return map
-  }, [activeTrack, minStep])
+  const noteAtCell = (pitch: number, step: number) => {
+    // 点击判定用连续区间：start/dur 可能为半格（minStep 切换换算产生），
+    // 命中其覆盖的整数格（floor(start) .. ceil(start+dur)-1）
+    return activeTrack.notes.find(
+      (n) => n.pitch === pitch && step >= Math.floor(n.start) && step < Math.ceil(n.start + n.dur),
+    )
+  }
 
   const cellFromEvent = (e: React.PointerEvent) => {
     const rect = areaRef.current!.getBoundingClientRect()
     const xPx = e.clientX - rect.left
     const y = Math.floor((e.clientY - rect.top) / PLAY_ROW_H)
-    let step: number
-    if (minStep === 8) {
-      // Snap to half-grid: step = n * 0.5
-      step = Math.round((xPx / (PLAY_CELL_W / 2))) / 2
-    } else {
-      step = Math.round(xPx / PLAY_CELL_W)
-    }
+    // 手动创建的音符始终对齐整数格（时值 = minStep 整数倍）
+    let step = Math.round(xPx / PLAY_CELL_W)
     step = Math.min(Math.max(step, 0), totalSteps - 1)
     const pitch = Math.min(Math.max(PLAY_PITCH_HI - y, PLAY_PITCH_LO), PLAY_PITCH_HI)
     return { step, pitch }
@@ -118,9 +108,9 @@ export default function PitchGrid({
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
     const { step, pitch } = cellFromEvent(e)
-    if (occupiedCells.has(`${pitch}:${step.toFixed(1)}`)) {
-      const note = activeTrack.notes.find((n) => n.pitch === pitch && n.start <= step && step < n.start + n.dur)
-      if (note) onRemoveNote(activeTrackId, note)
+    const note = noteAtCell(pitch, step)
+    if (note) {
+      onRemoveNote(activeTrackId, note)
       return
     }
     setDrag({ pitch, start: step, end: step })
@@ -134,7 +124,7 @@ export default function PitchGrid({
 
   const handlePointerUp = () => {
     if (!editable || !drag) return
-    onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + stepSize })
+    onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + 1 })
     setDrag(null)
   }
 
@@ -210,7 +200,7 @@ export default function PitchGrid({
                   style={{
                     left: drag.start * PLAY_CELL_W + 1,
                     top: (PLAY_PITCH_HI - drag.pitch) * PLAY_ROW_H + 1,
-                    width: (drag.end - drag.start + stepSize) * PLAY_CELL_W - 2,
+                    width: (drag.end - drag.start + 1) * PLAY_CELL_W - 2,
                     height: PLAY_ROW_H - 2,
                   }}
                 />
