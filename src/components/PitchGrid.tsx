@@ -6,11 +6,10 @@ import {
   PLAY_PITCH_HI,
   PLAY_PITCH_LO,
   PLAY_ROW_H,
+  PLAY_TRACK_COLORS,
 } from '../constants/playConfig'
 import { midiToNote } from '../theory/notes'
 import type { MinStep, PlayNote, PlayTrack } from '../types'
-
-const TRACK_COLORS = ['bg-cyan-400', 'bg-emerald-400', 'bg-violet-400', 'bg-amber-400']
 
 interface PitchGridProps {
   tracks: PlayTrack[]
@@ -67,7 +66,7 @@ export default function PitchGrid({
           left: n.start * PLAY_CELL_W,
           top: (PLAY_PITCH_HI - n.pitch) * PLAY_ROW_H,
           width: n.dur * PLAY_CELL_W,
-          color: TRACK_COLORS[trackIndex % TRACK_COLORS.length],
+          color: PLAY_TRACK_COLORS[trackIndex % PLAY_TRACK_COLORS.length],
           isActive: track.id === activeTrackId,
           muted: track.muted,
         })),

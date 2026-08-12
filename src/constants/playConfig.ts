@@ -23,3 +23,5 @@ export const PLAY_MIN_STEPS: MinStep[] = [8, 16]
 export const PLAY_CELL_W = 16
 
 export const PLAY_ROW_H = 18
+
+export const PLAY_TRACK_COLORS = ['bg-cyan-400', 'bg-emerald-400', 'bg-violet-400', 'bg-amber-400']

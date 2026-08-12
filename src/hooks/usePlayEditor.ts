@@ -88,14 +88,19 @@ export default function usePlayEditor() {
     setActiveTrackId(track.id)
   }, [])
 
-  const removeTrack = useCallback((trackId: string) => {
-    setTracks((prev) => {
-      if (prev.length <= 1) return prev
-      const next = prev.filter((t) => t.id !== trackId)
-      setActiveTrackId((current) => (current === trackId ? next[0].id : current))
-      return next
-    })
-  }, [])
+  const removeTrack = useCallback(
+    (trackId: string) => {
+      setTracks((prev) => {
+        if (prev.length <= 1) return prev
+        return prev.filter((t) => t.id !== trackId)
+      })
+      if (tracks.length > 1 && activeTrackId === trackId) {
+        const next = tracks.filter((t) => t.id !== trackId)
+        setActiveTrackId(next[0].id)
+      }
+    },
+    [tracks, activeTrackId],
+  )
 
   const selectTrack = useCallback((trackId: string) => {
     setActiveTrackId(trackId)

@@ -1,15 +1,16 @@
 import PitchGrid from '../components/PitchGrid'
 import PlayStatusBar from '../components/PlayStatusBar'
+import TrackList from '../components/TrackList'
 import usePlayEditor from '../hooks/usePlayEditor'
 
 export default function PlayPage() {
   const editor = usePlayEditor()
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6">
       <h2 className="text-xl font-bold">演奏</h2>
       <p className="text-sm text-slate-400">
-        步进网格编辑器：纵轴 = 音高、横轴 = 时间（4/4 拍，默认 120 BPM，最小分度 1/8 / 1/16）。多音轨与播放功能后续开放。
+        步进网格编辑器：纵轴 = 音高、横轴 = 时间（4/4 拍，默认 120 BPM，最小分度 1/8 / 1/16）。左侧音轨栏可切换 / 新增 / 删除音轨并独立配置音色与静音；播放功能后续开放。
       </p>
       <PlayStatusBar
         bpm={editor.bpm}
@@ -21,13 +22,26 @@ export default function PlayPage() {
         onUndo={editor.undo}
         onRedo={editor.redo}
       />
-      <PitchGrid
-        tracks={editor.tracks}
-        activeTrackId={editor.activeTrackId}
-        minStep={editor.minStep}
-        onAddNote={editor.addNote}
-        onRemoveNote={editor.removeNote}
-      />
+      <div className="flex items-start gap-3">
+        <TrackList
+          tracks={editor.tracks}
+          activeTrackId={editor.activeTrackId}
+          onSelect={editor.selectTrack}
+          onAdd={() => editor.addTrack('triangle')}
+          onRemove={editor.removeTrack}
+          onSetVoice={editor.setTrackVoice}
+          onToggleMuted={editor.toggleTrackMuted}
+        />
+        <div className="min-w-0 flex-1">
+          <PitchGrid
+            tracks={editor.tracks}
+            activeTrackId={editor.activeTrackId}
+            minStep={editor.minStep}
+            onAddNote={editor.addNote}
+            onRemoveNote={editor.removeNote}
+          />
+        </div>
+      </div>
     </div>
   )
 }
