@@ -71,8 +71,8 @@ export default function usePlayEditor() {
         ...track,
         notes: track.notes.map((note) => ({
           ...note,
-          start: Math.round(note.start * factor),
-          dur: Math.round(note.dur * factor),
+          start: Math.max(0, Math.round(note.start * factor)),
+          dur: Math.max(1, Math.round(note.dur * factor)),
         })),
       }))
     )
