@@ -65,14 +65,15 @@ export default function usePlayEditor() {
     const oldMinStep = minStepRef.current
     if (oldMinStep === step) return
     const factor = step / oldMinStep
-    // 缩放所有音符：start/dur 按比例换算（四舍五入）
+    // 缩放所有音符：start/dur 按比例精确换算（1/16↔1/8 的因子为 2 或 0.5，
+    // 奇数格在 1/8 下表现为半格，不四舍五入吸附）
     setTracks((prev) =>
       prev.map((track) => ({
         ...track,
         notes: track.notes.map((note) => ({
           ...note,
-          start: Math.max(0, Math.round(note.start * factor)),
-          dur: Math.max(1, Math.round(note.dur * factor)),
+          start: note.start * factor,
+          dur: note.dur * factor,
         })),
       }))
     )

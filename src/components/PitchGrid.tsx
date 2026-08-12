@@ -44,6 +44,7 @@ export default function PitchGrid({
   const rowCount = PLAY_PITCH_HI - PLAY_PITCH_LO + 1
   const width = totalSteps * PLAY_CELL_W
   const height = rowCount * PLAY_ROW_H
+  const stepSize = minStep === 8 ? 0.5 : 1
 
   const areaRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -87,9 +88,7 @@ export default function PitchGrid({
   const occupiedCells = useMemo(() => {
     const map = new Set<string>()
     for (const n of activeTrack.notes) {
-      // For minStep=8: support half-grid → add both n.start and n.start+0.5 if dur covers it
-      // Simplest: add all positions from start to start+dur-1 with 0.5 step
-      const stepSize = minStep === 8 ? 0.5 : 1
+      // For minStep=8: support half-grid → add all positions from start to start+dur with 0.5 step
       for (let i = 0; i < n.dur; i += stepSize) {
         const pos = n.start + i
         map.add(`${n.pitch}:${pos.toFixed(1)}`)
@@ -135,7 +134,6 @@ export default function PitchGrid({
 
   const handlePointerUp = () => {
     if (!editable || !drag) return
-    const stepSize = minStep === 8 ? 0.5 : 1
     onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + stepSize })
     setDrag(null)
   }
@@ -212,7 +210,7 @@ export default function PitchGrid({
                   style={{
                     left: drag.start * PLAY_CELL_W + 1,
                     top: (PLAY_PITCH_HI - drag.pitch) * PLAY_ROW_H + 1,
-                    width: (drag.end - drag.start + 1) * PLAY_CELL_W - 2,
+                    width: (drag.end - drag.start + stepSize) * PLAY_CELL_W - 2,
                     height: PLAY_ROW_H - 2,
                   }}
                 />
