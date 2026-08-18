@@ -2,13 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { playSequence, type PlaybackHandle } from '../audio/playSequence'
 import {
   PLAY_BAR_COUNT,
-  PLAY_BEATS_PER_BAR,
   PLAY_BPM_DEFAULT,
   PLAY_BPM_MAX,
   PLAY_BPM_MIN,
   PLAY_MIN_STEP_DEFAULT,
 } from '../constants/playConfig'
-import type { MinStep, PlayNote, PlayTrack, RhythmVoiceId } from '../types'
+import type { MinStep, PlayNote, PlayTrack, RhythmVoiceId, TimeSignature } from '../types'
 
 const INITIAL_TRACKS: PlayTrack[] = [{ id: 'track-1', voice: 'triangle', muted: false, notes: [] }]
 
@@ -20,6 +19,7 @@ export default function usePlayEditor() {
   const [activeTrackId, setActiveTrackId] = useState(INITIAL_TRACKS[0].id)
   const [bpm, setBpmState] = useState(PLAY_BPM_DEFAULT)
   const [minStep, setMinStepState] = useState<MinStep>(PLAY_MIN_STEP_DEFAULT)
+  const [timeSignature, setTimeSignatureState] = useState<TimeSignature>('4/4')
 
   const tracksRef = useRef(tracks)
   useEffect(() => {
@@ -36,7 +36,8 @@ export default function usePlayEditor() {
     minStepRef.current = minStep
   }, [minStep])
 
-  const totalSteps = PLAY_BAR_COUNT * PLAY_BEATS_PER_BAR * (minStep / 4)
+  const beatsPerBar = timeSignature === '3/4' ? 3 : 4
+  const totalSteps = PLAY_BAR_COUNT * beatsPerBar * (minStep / 4)
 
   const [startTick, setStartTickState] = useState(0)
   const startTickRef = useRef(startTick)
@@ -90,6 +91,18 @@ export default function usePlayEditor() {
     setCanUndo(true)
     setCanRedo(false)
   }, [])
+
+  const setTimeSignature = useCallback(
+    (ts: TimeSignature) => {
+      if (ts === timeSignature) return
+      // 切换拍号：保存当前快照（可撤回），清空全部音符，复位起点
+      pushHistory()
+      setTracks((prev) => prev.map((t) => ({ ...t, notes: [] })))
+      setTimeSignatureState(ts)
+      setStartTickState(0)
+    },
+    [timeSignature, pushHistory],
+  )
 
   const addNote = useCallback(
     (trackId: string, note: PlayNote) => {
@@ -225,6 +238,8 @@ export default function usePlayEditor() {
     activeTrackId,
     bpm,
     minStep,
+    timeSignature,
+    beatsPerBar,
     totalSteps,
     startTick,
     isPlaying,
@@ -234,6 +249,7 @@ export default function usePlayEditor() {
     canRedo,
     setBpm,
     setMinStep,
+    setTimeSignature,
     addNote,
     removeNote,
     undo,

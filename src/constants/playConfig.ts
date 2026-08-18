@@ -8,7 +8,7 @@ export const PLAY_BPM_DEFAULT = 120
 
 export const PLAY_BPM_PRESETS = [60, 80, 100, 120, 150, 180, 200, 240]
 
-export const PLAY_BEATS_PER_BAR = 4
+export const PLAY_BEATS_PER_BAR_DEFAULT = 4
 
 export const PLAY_BAR_COUNT = 4
 

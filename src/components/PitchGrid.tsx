@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   PLAY_BAR_COUNT,
-  PLAY_BEATS_PER_BAR,
   PLAY_CELL_W,
   PLAY_PITCH_HI,
   PLAY_PITCH_LO,
@@ -14,6 +13,7 @@ import type { MinStep, PlayNote, PlayTrack } from '../types'
 interface PitchGridProps {
   tracks: PlayTrack[]
   activeTrackId: string
+  beatsPerBar: number
   minStep: MinStep
   startTick: number
   editable: boolean
@@ -31,6 +31,7 @@ interface DragState {
 export default function PitchGrid({
   tracks,
   activeTrackId,
+  beatsPerBar,
   minStep,
   startTick,
   editable,
@@ -39,7 +40,7 @@ export default function PitchGrid({
   onSetStartTick,
 }: PitchGridProps) {
   const stepsPerBeat = minStep / 4
-  const stepsPerBar = PLAY_BEATS_PER_BAR * stepsPerBeat
+  const stepsPerBar = beatsPerBar * stepsPerBeat
   const totalSteps = PLAY_BAR_COUNT * stepsPerBar
   const rowCount = PLAY_PITCH_HI - PLAY_PITCH_LO + 1
   const width = totalSteps * PLAY_CELL_W

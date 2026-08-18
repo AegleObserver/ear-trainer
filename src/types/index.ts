@@ -22,6 +22,8 @@ export type PlaybackMode = 'simultaneous' | 'sequential'
 
 export type MinStep = 8 | 16
 
+export type TimeSignature = '4/4' | '3/4'
+
 export interface PlayNote {
   pitch: number
   start: number

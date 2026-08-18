@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { PLAY_BPM_MAX, PLAY_BPM_MIN, PLAY_BPM_PRESETS, PLAY_MIN_STEPS } from '../constants/playConfig'
-import type { MinStep } from '../types'
+import type { MinStep, TimeSignature } from '../types'
 
 interface PlayStatusBarProps {
   bpm: number
   minStep: MinStep
+  timeSignature: TimeSignature
   startTick: number
   canUndo: boolean
   canRedo: boolean
@@ -13,6 +14,7 @@ interface PlayStatusBarProps {
   isPaused: boolean
   onBpmChange: (bpm: number) => void
   onMinStepChange: (step: MinStep) => void
+  onTimeSignatureChange: (ts: TimeSignature) => void
   onUndo: () => void
   onRedo: () => void
   onResetStartTick: () => void
@@ -25,6 +27,7 @@ interface PlayStatusBarProps {
 export default function PlayStatusBar({
   bpm,
   minStep,
+  timeSignature,
   startTick,
   canUndo,
   canRedo,
@@ -33,6 +36,7 @@ export default function PlayStatusBar({
   isPaused,
   onBpmChange,
   onMinStepChange,
+  onTimeSignatureChange,
   onUndo,
   onRedo,
   onResetStartTick,
@@ -71,20 +75,20 @@ export default function PlayStatusBar({
       <div className="flex items-center gap-2">
         <span className="text-sm text-slate-400">拍号</span>
         <div className="flex overflow-hidden rounded-lg border border-slate-700">
-          <button
-            type="button"
-            className="bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300"
-          >
-            4/4
-          </button>
-          <button
-            type="button"
-            disabled
-            title="即将开放"
-            className="cursor-not-allowed px-3 py-1.5 text-sm text-slate-600"
-          >
-            3/4
-          </button>
+          {(['4/4', '3/4'] as const).map((ts) => (
+            <button
+              key={ts}
+              type="button"
+              onClick={() => onTimeSignatureChange(ts)}
+              disabled={locked}
+              title={ts === '3/4' ? '切换拍号将清空当前网格（可撤回）' : undefined}
+              className={`px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                timeSignature === ts ? 'bg-cyan-500/10 font-medium text-cyan-300' : 'text-slate-300 hover:bg-slate-800'
+              }`}
+            >
+              {ts}
+            </button>
+          ))}
         </div>
       </div>
 
