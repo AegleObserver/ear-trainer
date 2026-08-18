@@ -22,6 +22,8 @@ interface PlayStatusBarProps {
   onPause: () => void
   onResume: () => void
   onStop: () => void
+  onSave: () => void
+  isDirty: boolean
 }
 
 export default function PlayStatusBar({
@@ -44,6 +46,8 @@ export default function PlayStatusBar({
   onPause,
   onResume,
   onStop,
+  onSave,
+  isDirty,
 }: PlayStatusBarProps) {
   const [bpmInput, setBpmInput] = useState(String(bpm))
 
@@ -208,6 +212,15 @@ export default function PlayStatusBar({
       </div>
 
       <div className="ml-auto flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={!isDirty || locked}
+          title={isDirty ? '保存当前编辑到手稿' : '没有未保存的修改'}
+          className="rounded-lg border border-cyan-500/50 px-3 py-1.5 text-sm text-cyan-300 transition-colors hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          💾 保存
+        </button>
         <button
           type="button"
           onClick={onUndo}

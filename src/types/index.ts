@@ -37,6 +37,17 @@ export interface PlayTrack {
   notes: PlayNote[]
 }
 
+export interface Manuscript {
+  id: string
+  name: string
+  tracks: PlayTrack[]
+  bpm: number
+  minStep: MinStep
+  timeSignature: TimeSignature
+  createdAt: number
+  updatedAt: number
+}
+
 export interface UserSettings {
   rootRange: RootRangeId
   pitchKeyMode: PitchKeyMode

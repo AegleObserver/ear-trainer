@@ -56,6 +56,18 @@
 - **导出（规划项）**：后续支持导出 **MP3 / WAV** 音频文件；**现阶段空置**（预留，不实现）
 - **编辑记忆**：切 Tab 再返回，已编排内容（音符 / 音轨 / 参数）不丢失——满足「常驻挂载、hidden 显隐」架构约定（`AppShell`），无额外持久化
 
+## 手稿保存 / 加载 — ✅ 已实现
+
+- 右侧「手稿」栏（`ManuscriptList`）：列出已保存手稿（名称 + 相对更新时间），底部「＋ 新建」；上限 `MANUSCRIPT_MAX_COUNT`（默认 10，常量可调，不硬编码于逻辑）
+- 交互：
+  - **保存**：状态栏「💾 保存」按钮（仅 `isDirty` 时可用）；有活跃手稿则覆盖更新，无则新建条目（默认名 `MANUSCRIPT_DEFAULT_NAME`「未命名手稿」）
+  - **加载**：点击手稿项载入编辑器（含 tracks / bpm / minStep / timeSignature，复位起点、清空撤销栈）；若有未保存修改先弹窗确认
+  - **重命名**：点 ✏️ 进入 inline input，Enter 确认 / Esc 取消
+  - **删除**：点 🗑 二次确认；删除当前活跃手稿时自动清空编辑器
+  - **新建**：点「＋」清空编辑器并解除手稿关联（未保存修改先弹窗确认）
+- **持久化**：`localStorage` key `'ear-trainer.manuscripts'`（`loadManuscripts` / `saveManuscripts`）；手稿内容：tracks / bpm / minStep / timeSignature + id / name / createdAt / updatedAt；`startTick` 与撤销栈不序列化
+- 脏标记：`usePlayEditor` 内 `isDirty`（音符 / 音轨 / BPM / 最小分度 / 拍号变更即置脏），保存 / 加载 / 新建后复位
+
 ## 类型与数据 — ✅ 已实现
 
 `src/types/index.ts` 新增（其余沿用既有 `RhythmVoiceId`）：
@@ -74,6 +86,17 @@ export interface PlayTrack {
   voice: RhythmVoiceId
   muted: boolean
   notes: PlayNote[]
+}
+
+export interface Manuscript {
+  id: string          // crypto.randomUUID()
+  name: string
+  tracks: PlayTrack[]
+  bpm: number
+  minStep: MinStep
+  timeSignature: TimeSignature
+  createdAt: number
+  updatedAt: number
 }
 ```
 

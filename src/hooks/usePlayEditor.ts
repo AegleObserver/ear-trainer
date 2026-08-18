@@ -7,7 +7,7 @@ import {
   PLAY_BPM_MIN,
   PLAY_MIN_STEP_DEFAULT,
 } from '../constants/playConfig'
-import type { MinStep, PlayNote, PlayTrack, RhythmVoiceId, TimeSignature } from '../types'
+import type { Manuscript, MinStep, PlayNote, PlayTrack, RhythmVoiceId, TimeSignature } from '../types'
 
 const INITIAL_TRACKS: PlayTrack[] = [{ id: 'track-1', voice: 'triangle', muted: false, notes: [] }]
 
@@ -20,6 +20,8 @@ export default function usePlayEditor() {
   const [bpm, setBpmState] = useState(PLAY_BPM_DEFAULT)
   const [minStep, setMinStepState] = useState<MinStep>(PLAY_MIN_STEP_DEFAULT)
   const [timeSignature, setTimeSignatureState] = useState<TimeSignature>('4/4')
+  const [activeManuscriptId, setActiveManuscriptId] = useState<string | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
 
   const tracksRef = useRef(tracks)
   useEffect(() => {
@@ -57,29 +59,39 @@ export default function usePlayEditor() {
 
   const activeTrack = tracks.find((t) => t.id === activeTrackId) ?? tracks[0]
 
-  const setBpm = useCallback((value: number) => {
-    const clamped = Math.min(PLAY_BPM_MAX, Math.max(PLAY_BPM_MIN, Math.round(value)))
-    setBpmState(clamped)
-  }, [])
+  const markDirty = useCallback(() => setIsDirty(true), [])
 
-  const setMinStep = useCallback((step: MinStep) => {
-    const oldMinStep = minStepRef.current
-    if (oldMinStep === step) return
-    const factor = step / oldMinStep
-    // 缩放所有音符：start/dur 按比例精确换算（1/16↔1/8 的因子为 2 或 0.5，
-    // 奇数格在 1/8 下表现为半格，不四舍五入吸附）
-    setTracks((prev) =>
-      prev.map((track) => ({
-        ...track,
-        notes: track.notes.map((note) => ({
-          ...note,
-          start: note.start * factor,
-          dur: note.dur * factor,
-        })),
-      }))
-    )
-    setMinStepState(step)
-  }, [minStepRef])
+  const setBpm = useCallback(
+    (value: number) => {
+      const clamped = Math.min(PLAY_BPM_MAX, Math.max(PLAY_BPM_MIN, Math.round(value)))
+      setBpmState(clamped)
+      markDirty()
+    },
+    [markDirty],
+  )
+
+  const setMinStep = useCallback(
+    (step: MinStep) => {
+      const oldMinStep = minStepRef.current
+      if (oldMinStep === step) return
+      const factor = step / oldMinStep
+      // 缩放所有音符：start/dur 按比例精确换算（1/16↔1/8 的因子为 2 或 0.5，
+      // 奇数格在 1/8 下表现为半格，不四舍五入吸附）
+      setTracks((prev) =>
+        prev.map((track) => ({
+          ...track,
+          notes: track.notes.map((note) => ({
+            ...note,
+            start: note.start * factor,
+            dur: note.dur * factor,
+          })),
+        }))
+      )
+      setMinStepState(step)
+      markDirty()
+    },
+    [minStepRef, markDirty],
+  )
 
   const updateTrack = useCallback((trackId: string, updater: (t: PlayTrack) => PlayTrack) => {
     setTracks((prev) => prev.map((t) => (t.id === trackId ? updater(t) : t)))
@@ -100,16 +112,18 @@ export default function usePlayEditor() {
       setTracks((prev) => prev.map((t) => ({ ...t, notes: [] })))
       setTimeSignatureState(ts)
       setStartTickState(0)
+      markDirty()
     },
-    [timeSignature, pushHistory],
+    [timeSignature, pushHistory, markDirty],
   )
 
   const addNote = useCallback(
     (trackId: string, note: PlayNote) => {
       pushHistory()
       updateTrack(trackId, (t) => ({ ...t, notes: [...t.notes, note] }))
+      markDirty()
     },
-    [pushHistory, updateTrack],
+    [pushHistory, updateTrack, markDirty],
   )
 
   const removeNote = useCallback(
@@ -119,33 +133,46 @@ export default function usePlayEditor() {
         ...t,
         notes: t.notes.filter((n) => !(n.pitch === note.pitch && n.start === note.start && n.dur === note.dur)),
       }))
+      markDirty()
     },
-    [pushHistory, updateTrack],
+    [pushHistory, updateTrack, markDirty],
   )
 
-  const undo = useCallback(() => {
-    const prev = undoStack.current.pop()
-    if (!prev) return
-    redoStack.current.push(tracksRef.current)
-    setTracks(prev)
-    setCanUndo(undoStack.current.length > 0)
-    setCanRedo(true)
-  }, [])
+  const undo = useCallback(
+    () => {
+      const prev = undoStack.current.pop()
+      if (!prev) return
+      redoStack.current.push(tracksRef.current)
+      setTracks(prev)
+      setCanUndo(undoStack.current.length > 0)
+      setCanRedo(true)
+      markDirty()
+    },
+    [markDirty],
+  )
 
-  const redo = useCallback(() => {
-    const next = redoStack.current.pop()
-    if (!next) return
-    undoStack.current.push(tracksRef.current)
-    setTracks(next)
-    setCanRedo(redoStack.current.length > 0)
-    setCanUndo(true)
-  }, [])
+  const redo = useCallback(
+    () => {
+      const next = redoStack.current.pop()
+      if (!next) return
+      undoStack.current.push(tracksRef.current)
+      setTracks(next)
+      setCanRedo(redoStack.current.length > 0)
+      setCanUndo(true)
+      markDirty()
+    },
+    [markDirty],
+  )
 
-  const addTrack = useCallback((voice: RhythmVoiceId) => {
-    const track: PlayTrack = { id: nextTrackId(), voice, muted: false, notes: [] }
-    setTracks((prev) => [...prev, track])
-    setActiveTrackId(track.id)
-  }, [])
+  const addTrack = useCallback(
+    (voice: RhythmVoiceId) => {
+      const track: PlayTrack = { id: nextTrackId(), voice, muted: false, notes: [] }
+      setTracks((prev) => [...prev, track])
+      setActiveTrackId(track.id)
+      markDirty()
+    },
+    [markDirty],
+  )
 
   const removeTrack = useCallback(
     (trackId: string) => {
@@ -157,8 +184,9 @@ export default function usePlayEditor() {
         const next = tracks.filter((t) => t.id !== trackId)
         setActiveTrackId(next[0].id)
       }
+      markDirty()
     },
-    [tracks, activeTrackId],
+    [tracks, activeTrackId, markDirty],
   )
 
   const selectTrack = useCallback((trackId: string) => {
@@ -168,16 +196,61 @@ export default function usePlayEditor() {
   const setTrackVoice = useCallback(
     (trackId: string, voice: RhythmVoiceId) => {
       updateTrack(trackId, (t) => ({ ...t, voice }))
+      markDirty()
     },
-    [updateTrack],
+    [updateTrack, markDirty],
   )
 
   const toggleTrackMuted = useCallback(
     (trackId: string) => {
       updateTrack(trackId, (t) => ({ ...t, muted: !t.muted }))
+      markDirty()
     },
-    [updateTrack],
+    [updateTrack, markDirty],
   )
+
+  const loadManuscript = useCallback((m: Manuscript) => {
+    setTracks(m.tracks.map((t) => ({ ...t, notes: t.notes.map((n) => ({ ...n })) })))
+    setActiveTrackId(m.tracks[0]?.id ?? 'track-1')
+    setBpmState(m.bpm)
+    setMinStepState(m.minStep)
+    setTimeSignatureState(m.timeSignature)
+    setStartTickState(0)
+    setActiveManuscriptId(m.id)
+    setIsDirty(false)
+    undoStack.current = []
+    redoStack.current = []
+    setCanUndo(false)
+    setCanRedo(false)
+  }, [])
+
+  const toManuscript = useCallback(
+    (): Omit<Manuscript, 'id' | 'name' | 'createdAt' | 'updatedAt'> => ({
+      tracks: tracksRef.current,
+      bpm: bpmRef.current,
+      minStep: minStepRef.current,
+      timeSignature,
+    }),
+    [timeSignature],
+  )
+
+  const resetEditor = useCallback(() => {
+    const fresh: PlayTrack = { id: 'track-1', voice: 'triangle', muted: false, notes: [] }
+    setTracks([fresh])
+    setActiveTrackId('track-1')
+    setBpmState(PLAY_BPM_DEFAULT)
+    setMinStepState(PLAY_MIN_STEP_DEFAULT)
+    setTimeSignatureState('4/4')
+    setStartTickState(0)
+    setActiveManuscriptId(null)
+    setIsDirty(false)
+    undoStack.current = []
+    redoStack.current = []
+    setCanUndo(false)
+    setCanRedo(false)
+  }, [])
+
+  const markSaved = useCallback(() => setIsDirty(false), [])
 
   const setStartTick = useCallback(
     (tick: number) => {
@@ -260,6 +333,12 @@ export default function usePlayEditor() {
     setTrackVoice,
     toggleTrackMuted,
     setStartTick,
+    activeManuscriptId,
+    isDirty,
+    loadManuscript,
+    toManuscript,
+    resetEditor,
+    markSaved,
     play,
     pausePlayback,
     resumePlayback,

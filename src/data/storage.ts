@@ -1,4 +1,13 @@
-import type { PlaybackMode, QuizRecord, RhythmVoiceId, RootRangeId, ThemeId, TimbreId, UserSettings } from '../types'
+import type {
+  Manuscript,
+  PlaybackMode,
+  QuizRecord,
+  RhythmVoiceId,
+  RootRangeId,
+  ThemeId,
+  TimbreId,
+  UserSettings,
+} from '../types'
 
 export const ROOT_RANGES: Record<RootRangeId, { label: string; lo: number; hi: number }> = {
   low: { label: '低音区 C3–B3', lo: 48, hi: 59 },
@@ -62,6 +71,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
 
 const SETTINGS_KEY = 'ear-trainer.settings'
 const RECORDS_KEY = 'ear-trainer.records'
+const MANUSCRIPTS_KEY = 'ear-trainer.manuscripts'
 
 export function loadSettings(): UserSettings {
   try {
@@ -95,6 +105,25 @@ export function loadRecords(): QuizRecord[] {
 export function saveRecords(records: QuizRecord[]): void {
   try {
     localStorage.setItem(RECORDS_KEY, JSON.stringify(records))
+  } catch {
+    // ignore
+  }
+}
+
+export function loadManuscripts(): Manuscript[] {
+  try {
+    const raw = localStorage.getItem(MANUSCRIPTS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export function saveManuscripts(manuscripts: Manuscript[]): void {
+  try {
+    localStorage.setItem(MANUSCRIPTS_KEY, JSON.stringify(manuscripts))
   } catch {
     // ignore
   }

@@ -25,3 +25,7 @@ export const PLAY_CELL_W = 16
 export const PLAY_ROW_H = 18
 
 export const PLAY_TRACK_COLORS = ['bg-cyan-400', 'bg-emerald-400', 'bg-violet-400', 'bg-amber-400']
+
+export const MANUSCRIPT_MAX_COUNT = 10
+
+export const MANUSCRIPT_DEFAULT_NAME = '未命名手稿'
