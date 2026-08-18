@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { configurePlayback, configureRhythmVoice, configureSynth, setVolume } from '../audio/engine'
+import ReferenceToneButton from '../components/ReferenceToneButton'
 import { useAppData } from '../context/AppDataContext'
 import type { PageDef, PageId } from '../types'
 import TestPage from '../pages/TestPage'
 import TrainingGroundPage from '../pages/TrainingGroundPage'
+import TunerPage from '../pages/TunerPage'
 import PlayPage from '../pages/PlayPage'
 import ProfilePage from '../pages/ProfilePage'
 import SettingsPage from '../pages/SettingsPage'
@@ -11,6 +13,7 @@ import SettingsPage from '../pages/SettingsPage'
 const PAGES: PageDef[] = [
   { id: 'test', label: '测试', icon: '🎧', enabled: true },
   { id: 'training', label: '训练场', icon: '🎼', enabled: true },
+  { id: 'tuner', label: '调音', icon: '🎚️', enabled: true },
   { id: 'play', label: '演奏', icon: '🎹', enabled: true },
   { id: 'profile', label: '个人中心', icon: '👤', enabled: true },
   { id: 'settings', label: '设置', icon: '⚙️', enabled: true },
@@ -22,12 +25,12 @@ interface AppShellProps {
 }
 
 export default function AppShell({ activePage, onNavigate }: AppShellProps) {
-  const [volume, setVolumeState] = useState(0.8)
-  const { settings } = useAppData()
+  const { settings, updateSettings } = useAppData()
+  const [volume, setVolumeState] = useState(settings.volume)
 
   useEffect(() => {
-    setVolume(0.8)
-  }, [])
+    setVolume(settings.volume)
+  }, [settings.volume])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', settings.theme)
@@ -45,11 +48,15 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
     configureRhythmVoice(settings.rhythmVoice)
   }, [settings.rhythmVoice])
 
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Number(e.target.value)
-    setVolumeState(v)
-    setVolume(v)
-  }, [])
+  const handleVolumeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = Number(e.target.value)
+      setVolumeState(v)
+      setVolume(v)
+      updateSettings({ volume: v })
+    },
+    [updateSettings],
+  )
 
   const handleNavigate = useCallback(
     (page: PageDef) => {
@@ -73,9 +80,10 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
             </span>
           </h1>
         </div>
-        <div className="flex items-center gap-3 text-sm text-slate-400">
-          <label className="hidden items-center gap-2 sm:flex">
-            <span>音量</span>
+        <div className="flex items-center gap-2 text-sm text-slate-400 sm:gap-3">
+          <ReferenceToneButton />
+          <label className="flex items-center gap-2">
+            <span className="hidden sm:inline">音量</span>
             <input
               type="range"
               min="0"
@@ -96,6 +104,9 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
         </div>
         <div className={activePage === 'training' ? '' : 'hidden'}>
           <TrainingGroundPage />
+        </div>
+        <div className={activePage === 'tuner' ? '' : 'hidden'}>
+          <TunerPage active={activePage === 'tuner'} />
         </div>
         <div className={activePage === 'play' ? '' : 'hidden'}>
           <PlayPage />

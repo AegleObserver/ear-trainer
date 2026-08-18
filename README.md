@@ -14,7 +14,8 @@ App (activePage state)
    └─ AppShell              # Header + 常驻挂载的 5 个页面(hidden 显隐) + 底部 Tab
       ├─ TestPage           # 测试：音高域 EarTrainingPage / 节奏域 RhythmTestPage
       ├─ TrainingGroundPage # 训练场：音高域 / 节奏域 RhythmGroundPage
-      ├─ PlayPage           # 演奏：网格编辑器+播放+手稿管理（缩放、导出规划中）
+      ├─ TunerPage          # 调音：吉他 / 尤克里里 / 自定义音（麦克风测音）
+      ├─ PlayPage           # 演奏：网格编辑器+播放（3/4 拍、缩放、导出规划中）
       ├─ ProfilePage        # 个人中心：记录/评级/考察配置
       └─ SettingsPage       # 设置：主题/音色/播放方式/测试参数/节奏音色+BPM
 ```
@@ -31,16 +32,16 @@ App (activePage state)
 | 目录 | 职责 |
 |------|------|
 | `src/pages/` | 页面级组件（Tab 内容、双域容器） |
-| `src/components/` | 通用组件（布局、选项网格、记谱渲染、结算界面等） |
-| `src/hooks/` | 会话引擎与各 trainer hook（核心业务逻辑） |
-| `src/audio/` | 音频：engine（单例/配置）+ playNotes + rhythmPlay |
-| `src/theory/` | 音名/音程/和弦/节奏 数据与工具 |
+| `src/components/` | 通用组件（布局、选项网格、记谱渲染、结算界面、试听按钮等） |
+| `src/hooks/` | 会话引擎与各 trainer hook + 调音器 useTuner（核心业务逻辑） |
+| `src/audio/` | 音频：engine（单例/配置）+ playNotes + rhythmPlay + tuner（麦克风测频） |
+| `src/theory/` | 音名/音程/和弦/节奏/调弦 数据与工具 |
 | `src/constants/` | 玩法配置常量（题量/限时/反馈时长） |
 | `src/context/` | 全局状态（settings/records） |
 | `src/data/` | localStorage 读写 + 根音区间 + 评级 |
 | `src/types/` | 全部类型定义（改动从这儿开始对齐） |
 
-`app-framework/PROMPT.md`、`ear-training/PROMPT.md` 与 `play/PROMPT.md` 是分阶段构建的功能规格与设计决策文档，新功能追加时在其中记录（含 ✅ 已实现 标记），是理解现状的最佳入口。
+`app-framework/PROMPT.md`、`ear-training/PROMPT.md`、`play/PROMPT.md` 与 `tuner/Tuner_PROMPT.md` 是分阶段构建的功能规格与设计决策文档，新功能追加时在其中记录（含 ✅ 已实现 标记），是理解现状的最佳入口。
 
 ## 功能规划
 
@@ -52,8 +53,9 @@ App (activePage state)
 - [x] 个人中心：最近记录 · 参与次数 · 评级 · 考察配置（根音区间/键位/音程/和弦池）
 - [x] 训练场：自定义根音（音名+八度），点击音程/和弦即时发声，未勾选仅播放根音
 - [x] 设置：页面风格 4 主题 · 音色 5 档 · 播放方式（同时/逐音上行）· 标准题量/限时时长 · 节奏音色（鼓/5 档 A4 乐音）· 速度 BPM（60–200 可自定义）
-- [x] 演奏：网格多轨编辑器（纵=音高/横=时间、步进放置、多声部、3/4 拍、起点起播、手稿保存/加载/重命名/删除，复用节奏型测试音色池）
-- [ ] 演奏进阶：横纵轴缩放 · MP3/WAV 导出（规划中）
+- [x] 演奏：网格多轨编辑器（纵=音高/横=时间、步进放置、多声部、起点起播，复用节奏型测试音色池）
+- [x] 调音器：吉他 / 尤克里里 / 自定义音，麦克风测音（自相关）对照目标音判断音分偏差；Header 试听 A4 参考音 + 音量持久化
+- [ ] 演奏进阶：3/4 拍号 · 横纵轴缩放 · MP3/WAV 导出（规划中）
 - [ ] 调性识别（规划中）
 
 ## 开发

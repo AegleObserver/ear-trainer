@@ -67,6 +67,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   rhythmBpm: 90,
   standardCount: 20,
   timedLimitSeconds: 120,
+  volume: 0.8,
 }
 
 const SETTINGS_KEY = 'ear-trainer.settings'

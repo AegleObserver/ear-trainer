@@ -1,4 +1,4 @@
-export type PageId = 'test' | 'training' | 'play' | 'settings' | 'profile'
+export type PageId = 'test' | 'training' | 'tuner' | 'play' | 'settings' | 'profile'
 
 export type SoundDomain = 'pitch' | 'rhythm'
 
@@ -21,6 +21,8 @@ export type RhythmVoiceId = 'drum' | TimbreId
 export type PlaybackMode = 'simultaneous' | 'sequential'
 
 export type MinStep = 8 | 16
+
+export type TunerMode = 'guitar' | 'ukulele' | 'custom'
 
 export type TimeSignature = '4/4' | '3/4'
 
@@ -60,6 +62,7 @@ export interface UserSettings {
   rhythmBpm: number
   standardCount: number
   timedLimitSeconds: number
+  volume: number
 }
 
 export interface GameSessionConfig {
