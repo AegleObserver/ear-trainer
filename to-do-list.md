@@ -16,10 +16,8 @@
 - 方案要点：命名需等 Tab 合并（第 2 项）功能定稿后统一确定；涉及 `AppShell` Header、`index.html` `<title>`、`README`、部署仓库名/描述，改动面小但需先定名。
 
 ## 4. UI 优化
-### 4-1 演奏网格仅显示当前音轨音符
-- 现状：`src/components/PitchGrid.tsx` `notes` 用 `tracks.flatMap` 渲染**所有音轨**音符（当前轨仅加白色描边高亮），切换音轨时其他轨音符不隐藏。
-- 目标：切换音轨后网格只显示**当前音轨**的音符。
-- 方案要点：将 `notes` 计算改为仅取 `activeTrack.notes`（保留原多轨配色渲染逻辑供后续「全部显示」开关复用，或直接移除叠加逻辑）。
+### 4-1 演奏网格仅显示当前音轨音符 ✅ 已实现
+- 实现：`src/components/PitchGrid.tsx` 的 `notes` memo 由 `tracks.flatMap`（全部轨叠加）改为仅取 `activeTrack.notes`（按当前轨索引配色，移除多轨白边高亮）；点击判定 `noteAtCell` 本就只查当前轨，行为现已一致。
 
 ### 4-2 网格自适应填充 + 最小宽度 + 布局回流
 - 现状：网格尺寸刚性（`width = totalSteps × PLAY_CELL_W`），外层仅 `overflow-x-auto`，不随容器宽度拉伸；`PlayPage` 三栏均 `w-56` 固定宽（音轨 / 网格 / 手稿），窄屏三栏并排会严重挤压。

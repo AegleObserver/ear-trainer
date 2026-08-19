@@ -55,6 +55,7 @@ export default function PitchGrid({
   }, [activeTrackId])
 
   const activeTrack = tracks.find((t) => t.id === activeTrackId) ?? tracks[0]
+  const activeTrackIndex = Math.max(0, tracks.findIndex((t) => t.id === activeTrackId))
 
   const pitches = useMemo(() => {
     const rows: number[] = []
@@ -72,18 +73,15 @@ export default function PitchGrid({
 
   const notes = useMemo(
     () =>
-      tracks.flatMap((track, trackIndex) =>
-        track.notes.map((n) => ({
-          key: `${track.id}:${n.pitch}:${n.start}:${n.dur}`,
-          left: n.start * PLAY_CELL_W,
-          top: (PLAY_PITCH_HI - n.pitch) * PLAY_ROW_H,
-          width: n.dur * PLAY_CELL_W,
-          color: PLAY_TRACK_COLORS[trackIndex % PLAY_TRACK_COLORS.length],
-          isActive: track.id === activeTrackId,
-          muted: track.muted,
-        })),
-      ),
-    [tracks, activeTrackId],
+      activeTrack.notes.map((n) => ({
+        key: `${activeTrack.id}:${n.pitch}:${n.start}:${n.dur}`,
+        left: n.start * PLAY_CELL_W,
+        top: (PLAY_PITCH_HI - n.pitch) * PLAY_ROW_H,
+        width: n.dur * PLAY_CELL_W,
+        color: PLAY_TRACK_COLORS[activeTrackIndex % PLAY_TRACK_COLORS.length],
+        muted: activeTrack.muted,
+      })),
+    [activeTrack, activeTrackIndex],
   )
 
   const noteAtCell = (pitch: number, step: number) => {
@@ -191,9 +189,7 @@ export default function PitchGrid({
               {notes.map((n) => (
                 <div
                   key={n.key}
-                  className={`absolute rounded-sm ${n.color} ${
-                    n.isActive ? 'ring-1 ring-white/60' : ''
-                  } ${n.muted ? 'opacity-30' : 'opacity-80'}`}
+                  className={`absolute rounded-sm ${n.color} ${n.muted ? 'opacity-30' : 'opacity-80'}`}
                   style={{ left: n.left + 1, top: n.top + 1, width: n.width - 2, height: PLAY_ROW_H - 2 }}
                 />
               ))}
