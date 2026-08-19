@@ -30,6 +30,9 @@ interface DragState {
   end: number
 }
 
+// 左侧音高标签列固定宽度（px），网格区 = 容器宽 − 标签列
+const LABEL_W = 40
+
 export default function PitchGrid({
   tracks,
   activeTrackId,
@@ -46,8 +49,25 @@ export default function PitchGrid({
   const stepsPerBar = beatsPerBar * stepsPerBeat
   const totalSteps = PLAY_BAR_COUNT * stepsPerBar
   const rowCount = PLAY_PITCH_HI - PLAY_PITCH_LO + 1
-  const width = totalSteps * PLAY_CELL_W
   const height = rowCount * PLAY_ROW_H
+
+  const sectionRef = useRef<HTMLElement>(null)
+  const [containerW, setContainerW] = useState(0)
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) setContainerW(entry.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // 四个小节等比放缩占满容器宽度：格宽 = (容器宽 − 标签列) / 总步数；
+  // 未测量前以默认格宽（16px）回退渲染
+  const width = containerW > LABEL_W ? containerW - LABEL_W : totalSteps * PLAY_CELL_W
+  const cellW = width / totalSteps
 
   const areaRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -67,23 +87,23 @@ export default function PitchGrid({
 
   const gridBackground = useMemo(() => {
     const stepLines =
-      `repeating-linear-gradient(to right, transparent 0 ${PLAY_CELL_W - 1}px, rgba(148,163,184,0.15) ${PLAY_CELL_W - 1}px ${PLAY_CELL_W}px), ` +
+      `repeating-linear-gradient(to right, transparent 0 ${cellW - 1}px, rgba(148,163,184,0.15) ${cellW - 1}px ${cellW}px), ` +
       `repeating-linear-gradient(to bottom, transparent 0 ${PLAY_ROW_H - 1}px, rgba(148,163,184,0.12) ${PLAY_ROW_H - 1}px ${PLAY_ROW_H}px)`
-    const barLines = `repeating-linear-gradient(to right, transparent 0 ${stepsPerBar * PLAY_CELL_W - 1}px, rgba(148,163,184,0.35) ${stepsPerBar * PLAY_CELL_W - 1}px ${stepsPerBar * PLAY_CELL_W}px)`
+    const barLines = `repeating-linear-gradient(to right, transparent 0 ${stepsPerBar * cellW - 1}px, rgba(148,163,184,0.35) ${stepsPerBar * cellW - 1}px ${stepsPerBar * cellW}px)`
     return `${stepLines}, ${barLines}`
-  }, [stepsPerBar])
+  }, [stepsPerBar, cellW])
 
   const notes = useMemo(
     () =>
       activeTrack.notes.map((n) => ({
         key: `${activeTrack.id}:${n.pitch}:${n.start}:${n.dur}`,
-        left: n.start * PLAY_CELL_W,
+        left: n.start * cellW,
         top: (PLAY_PITCH_HI - n.pitch) * PLAY_ROW_H,
-        width: n.dur * PLAY_CELL_W,
+        width: n.dur * cellW,
         color: PLAY_TRACK_COLORS[activeTrackIndex % PLAY_TRACK_COLORS.length],
         muted: activeTrack.muted,
       })),
-    [activeTrack, activeTrackIndex],
+    [activeTrack, activeTrackIndex, cellW],
   )
 
   const noteAtCell = (pitch: number, step: number) => {
@@ -99,7 +119,7 @@ export default function PitchGrid({
     const xPx = e.clientX - rect.left
     const y = Math.floor((e.clientY - rect.top) / PLAY_ROW_H)
     // 手动创建的音符始终对齐整数格（时值 = minStep 整数倍）
-    let step = Math.round(xPx / PLAY_CELL_W)
+    let step = Math.round(xPx / cellW)
     step = Math.min(Math.max(step, 0), totalSteps - 1)
     const pitch = Math.min(Math.max(PLAY_PITCH_HI - y, PLAY_PITCH_LO), PLAY_PITCH_HI)
     return { step, pitch }
@@ -136,10 +156,10 @@ export default function PitchGrid({
   }
 
   return (
-    <section className="panel w-full overflow-hidden">
+    <section ref={sectionRef} className="panel w-full overflow-hidden">
       <div className="overflow-x-auto">
         <div className="flex min-w-max">
-          <div className="sticky left-0 z-10 border-r border-slate-800 bg-slate-900">
+          <div className="sticky left-0 z-10 w-10 shrink-0 border-r border-slate-800 bg-slate-900">
             <div className="flex h-6 items-center justify-end pr-2 text-[10px] text-slate-500">音高</div>
             {pitches.map((p) => (
               <div
@@ -165,7 +185,7 @@ export default function PitchGrid({
                   disabled={!editable}
                   title="点击设为播放起点"
                   className="flex h-full cursor-pointer items-center pl-1 text-left transition-colors hover:bg-cyan-500/10 hover:text-cyan-300 disabled:cursor-not-allowed"
-                  style={{ width: stepsPerBar * PLAY_CELL_W }}
+                  style={{ width: stepsPerBar * cellW }}
                 >
                   小节 {bar + 1}
                 </button>
@@ -184,7 +204,7 @@ export default function PitchGrid({
               {startTick > 0 && (
                 <div
                   className="absolute bottom-0 top-0 z-10 w-0.5 bg-rose-400/80"
-                  style={{ left: startTick * PLAY_CELL_W }}
+                  style={{ left: startTick * cellW }}
                   title={`播放起点 ${startTick}`}
                 />
               )}
@@ -199,9 +219,9 @@ export default function PitchGrid({
                 <div
                   className="absolute rounded-sm bg-cyan-300/70"
                   style={{
-                    left: drag.start * PLAY_CELL_W + 1,
+                    left: drag.start * cellW + 1,
                     top: (PLAY_PITCH_HI - drag.pitch) * PLAY_ROW_H + 1,
-                    width: (drag.end - drag.start + 1) * PLAY_CELL_W - 2,
+                    width: (drag.end - drag.start + 1) * cellW - 2,
                     height: PLAY_ROW_H - 2,
                   }}
                 />

@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ManuscriptList from '../components/ManuscriptList'
 import PitchGrid from '../components/PitchGrid'
 import PlayStatusBar from '../components/PlayStatusBar'
 import TrackList from '../components/TrackList'
-import { MANUSCRIPT_MAX_COUNT } from '../constants/playConfig'
+import { MANUSCRIPT_MAX_COUNT, PLAY_BAR_COUNT, PLAY_CELL_W } from '../constants/playConfig'
 import { useAppData } from '../context/AppDataContext'
 import { loadManuscripts, nextManuscriptName, saveManuscripts } from '../data/storage'
 import usePlayEditor from '../hooks/usePlayEditor'
@@ -15,10 +15,31 @@ function newManuscriptId(): string {
     : `manuscript-${Date.now()}`
 }
 
+// 侧栏固定宽（w-56 = 224px）与列间距（gap-3 = 12px），用于三栏宽度判定
+const SIDE_W = 224
+const GAP_W = 12
+
 export default function PlayPage() {
   const editor = usePlayEditor()
   const { settings } = useAppData()
   const [manuscripts, setManuscripts] = useState<Manuscript[]>(() => loadManuscripts())
+  const layoutRef = useRef<HTMLDivElement>(null)
+  const [layoutW, setLayoutW] = useState(0)
+
+  useEffect(() => {
+    const el = layoutRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) setLayoutW(entry.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // 网格默认宽度 = 4 小节 × 步数 × 默认格宽；三栏并排时网格可用宽 = 行宽 − 两个侧栏与间距。
+  // 网格可用宽低于默认宽度时，手稿栏移至音轨正下方（左侧堆叠），保证网格不被压缩得比默认还小。
+  const naturalGridW = PLAY_BAR_COUNT * editor.beatsPerBar * (editor.minStep / 4) * PLAY_CELL_W
+  const wide = layoutW === 0 || layoutW >= naturalGridW + 2 * (SIDE_W + GAP_W)
 
   const commitManuscripts = useCallback((next: Manuscript[]) => {
     setManuscripts(next)
@@ -116,29 +137,31 @@ export default function PlayPage() {
         onSave={handleSave}
         isDirty={editor.isDirty}
       />
-      <div className="flex flex-wrap items-start gap-3">
-        <TrackList
-          className="order-1"
-          tracks={editor.tracks}
-          activeTrackId={editor.activeTrackId}
-          locked={editor.locked}
-          onSelect={editor.selectTrack}
-          onAdd={() => editor.addTrack('triangle')}
-          onRemove={editor.removeTrack}
-          onSetVoice={editor.setTrackVoice}
-          onToggleMuted={editor.toggleTrackMuted}
-        />
-        <ManuscriptList
-          className="order-2 lg:order-3"
-          manuscripts={manuscripts}
-          activeManuscriptId={editor.activeManuscriptId}
-          maxCount={MANUSCRIPT_MAX_COUNT}
-          onLoad={handleLoad}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onNew={handleNew}
-        />
-        <div className="order-3 lg:order-2 min-w-[400px] flex-1">
+      <div ref={layoutRef} className="flex items-start gap-3">
+        <div className="flex w-56 shrink-0 flex-col gap-3">
+          <TrackList
+            tracks={editor.tracks}
+            activeTrackId={editor.activeTrackId}
+            locked={editor.locked}
+            onSelect={editor.selectTrack}
+            onAdd={() => editor.addTrack('triangle')}
+            onRemove={editor.removeTrack}
+            onSetVoice={editor.setTrackVoice}
+            onToggleMuted={editor.toggleTrackMuted}
+          />
+          {!wide && (
+            <ManuscriptList
+              manuscripts={manuscripts}
+              activeManuscriptId={editor.activeManuscriptId}
+              maxCount={MANUSCRIPT_MAX_COUNT}
+              onLoad={handleLoad}
+              onRename={handleRename}
+              onDelete={handleDelete}
+              onNew={handleNew}
+            />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
           <PitchGrid
             tracks={editor.tracks}
             activeTrackId={editor.activeTrackId}
@@ -152,6 +175,17 @@ export default function PlayPage() {
             onSetStartTick={editor.setStartTick}
           />
         </div>
+        {wide && (
+          <ManuscriptList
+            manuscripts={manuscripts}
+            activeManuscriptId={editor.activeManuscriptId}
+            maxCount={MANUSCRIPT_MAX_COUNT}
+            onLoad={handleLoad}
+            onRename={handleRename}
+            onDelete={handleDelete}
+            onNew={handleNew}
+          />
+        )}
       </div>
     </div>
   )

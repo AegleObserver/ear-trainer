@@ -5,7 +5,6 @@ interface ManuscriptListProps {
   manuscripts: Manuscript[]
   activeManuscriptId: string | null
   maxCount: number
-  className?: string
   onLoad: (m: Manuscript) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
@@ -24,7 +23,6 @@ export default function ManuscriptList({
   manuscripts,
   activeManuscriptId,
   maxCount,
-  className = '',
   onLoad,
   onRename,
   onDelete,
@@ -45,7 +43,7 @@ export default function ManuscriptList({
   }
 
   return (
-    <aside className={`panel flex w-56 shrink-0 flex-col gap-2 self-start p-3 ${className}`}>
+    <aside className="panel flex w-56 shrink-0 flex-col gap-2 self-start p-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">手稿</h3>
         <span className="text-xs text-slate-500">
