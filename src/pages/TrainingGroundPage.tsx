@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { playChord, playInterval, playNote } from '../audio/playNotes'
 import SoundDomainToggle from '../components/SoundDomainToggle'
+import { useAppData } from '../context/AppDataContext'
 import { CHORDS } from '../theory/chords'
 import { INTERVALS } from '../theory/intervals'
-import { midiToNote, NOTE_NAMES, noteToMidi } from '../theory/notes'
+import { formatNoteName, midiToNote, NOTE_NAMES, noteToMidi } from '../theory/notes'
 import type { ChordDef, IntervalDef, SoundDomain } from '../types'
 import RhythmGroundPage from './RhythmGroundPage'
 
@@ -16,6 +17,7 @@ const PLAY_DURATION_MS = 1300
 const selectionKey = (sel: Selection) => `${sel.type}:${sel.def.name}`
 
 export default function TrainingGroundPage() {
+  const { settings } = useAppData()
   const [domain, setDomain] = useState<SoundDomain>('pitch')
   const [pitchClass, setPitchClass] = useState<(typeof NOTE_NAMES)[number]>('C')
   const [octave, setOctave] = useState(4)
@@ -106,7 +108,9 @@ export default function TrainingGroundPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-400">当前根音</span>
-                <span className="text-4xl font-bold tracking-tight text-cyan-400">{rootName}</span>
+                <span className="text-4xl font-bold tracking-tight text-cyan-400">
+                  {formatNoteName(rootName, settings.blackKeyMode)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -147,14 +151,16 @@ export default function TrainingGroundPage() {
                     disabled={playing}
                     className="sr-only"
                   />
-                  {name}
+                  {formatNoteName(name, settings.blackKeyMode)}
                 </label>
               ))}
             </div>
 
             <div className="rounded-xl bg-slate-800/40 px-3 py-2 text-sm text-slate-300">
               将播放：{soundLabel}
-              <span className="ml-2 text-slate-500">{activeNotes.join(' → ')}</span>
+              <span className="ml-2 text-slate-500">
+                {activeNotes.map((n) => formatNoteName(n, settings.blackKeyMode)).join(' → ')}
+              </span>
             </div>
 
             <button

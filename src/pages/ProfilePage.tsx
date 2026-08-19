@@ -2,7 +2,7 @@ import { CHORDS } from '../theory/chords'
 import { INTERVALS } from '../theory/intervals'
 import { computeRating, ROOT_RANGES } from '../data/storage'
 import { useAppData } from '../context/AppDataContext'
-import type { GameMode, Mode, PitchKeyMode, RootRangeId } from '../types'
+import type { BlackKeyMode, GameMode, Mode, PitchKeyMode, RootRangeId } from '../types'
 
 const QUESTION_TYPE_LABELS: Record<Mode, string> = {
   pitch: '音名',
@@ -164,6 +164,31 @@ export default function ProfilePage() {
                   className="accent-cyan-400"
                 />
                 {key === 'white' ? '白键（自然音）' : '全键（含升降号）'}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-sm text-slate-400">黑键显示方式</p>
+          <div className="flex flex-wrap gap-2">
+            {(['sharp', 'flat'] as BlackKeyMode[]).map((mode) => (
+              <label
+                key={mode}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                  settings.blackKeyMode === mode
+                    ? 'border-cyan-500 bg-cyan-500/10 text-cyan-300'
+                    : 'border-slate-700 text-slate-300 hover:border-slate-500'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="blackKey"
+                  checked={settings.blackKeyMode === mode}
+                  onChange={() => updateSettings({ blackKeyMode: mode })}
+                  className="accent-cyan-400"
+                />
+                {mode === 'sharp' ? '升号（C# D# F# G# A#）' : '降号（Db Eb Gb Ab Bb）'}
               </label>
             ))}
           </div>

@@ -4,6 +4,7 @@ import PitchGrid from '../components/PitchGrid'
 import PlayStatusBar from '../components/PlayStatusBar'
 import TrackList from '../components/TrackList'
 import { MANUSCRIPT_MAX_COUNT } from '../constants/playConfig'
+import { useAppData } from '../context/AppDataContext'
 import { loadManuscripts, nextManuscriptName, saveManuscripts } from '../data/storage'
 import usePlayEditor from '../hooks/usePlayEditor'
 import type { Manuscript } from '../types'
@@ -16,6 +17,7 @@ function newManuscriptId(): string {
 
 export default function PlayPage() {
   const editor = usePlayEditor()
+  const { settings } = useAppData()
   const [manuscripts, setManuscripts] = useState<Manuscript[]>(() => loadManuscripts())
 
   const commitManuscripts = useCallback((next: Manuscript[]) => {
@@ -133,6 +135,7 @@ export default function PlayPage() {
             minStep={editor.minStep}
             startTick={editor.startTick}
             editable={!editor.locked}
+            blackKeyMode={settings.blackKeyMode}
             onAddNote={editor.addNote}
             onRemoveNote={editor.removeNote}
             onSetStartTick={editor.setStartTick}

@@ -59,6 +59,7 @@ export const TIMED_LIMIT_OPTIONS = [60, 120, 180, 300]
 export const DEFAULT_SETTINGS: UserSettings = {
   rootRange: 'full',
   pitchKeyMode: 'all',
+  blackKeyMode: 'sharp',
   enabledIntervals: [],
   enabledChords: [],
   theme: 'dark-cyan',

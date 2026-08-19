@@ -15,6 +15,7 @@ export type GameSessionState = 'playing' | 'finished'
 
 export type RootRangeId = 'low' | 'mid' | 'high' | 'full'
 export type PitchKeyMode = 'white' | 'all'
+export type BlackKeyMode = 'sharp' | 'flat'
 export type ThemeId = 'dark-cyan' | 'light' | 'dark-violet' | 'dark-amber'
 export type TimbreId = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'fm'
 export type RhythmVoiceId = 'drum' | TimbreId
@@ -53,6 +54,7 @@ export interface Manuscript {
 export interface UserSettings {
   rootRange: RootRangeId
   pitchKeyMode: PitchKeyMode
+  blackKeyMode: BlackKeyMode
   enabledIntervals: number[]
   enabledChords: string[]
   theme: ThemeId

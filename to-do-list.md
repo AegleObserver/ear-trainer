@@ -36,6 +36,9 @@
   - a) `PitchGrid.handlePointerUp` 建音符后即时播放该音符音高（当前轨音色）；
   - b) `TrackList` 音轨色块改为可点击按钮，试听该轨音色，默认音高 A4（`PLAY_PREVIEW_MIDI = 69`，常量位于 `playConfig.ts`）；播放锁定期间禁用。
 
+### 5-3 黑键个性化显示 ✅ 已实现
+- 实现：新增设置 `blackKeyMode: 'sharp' | 'flat'`（`UserSettings`，默认升号），个人中心「黑键显示方式」单选切换；`theory/notes.ts` 的 `formatNoteName(note, mode)` 仅作用于展示层（内部始终用升号规范名，播放/判题不受影响），覆盖：演奏网格音高标签、调音读数/自定义音/音名选择、训练场根音与音符、音感测试 pitch 选项与反馈。
+
 ## 6. 多端交互体验
 - 现状：部分页面已有基础响应式（`AppShell` Tab 内边距、`TunerPage` 网格 `sm:grid-cols-6`），但 `PlayPage` 三栏固定宽（见 4-2）、网格交互依赖 `pointer` 拖拽（触屏需 `touch-none` 已加）。
 - 目标：整体移动端适配。

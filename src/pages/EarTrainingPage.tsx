@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import GameModeSelector from '../components/GameModeSelector'
 import ModeTabs from '../components/ModeTabs'
 import QuizLayout from '../components/QuizLayout'
@@ -6,6 +6,7 @@ import { useAppData } from '../context/AppDataContext'
 import { useChordTrainer } from '../hooks/useChordTrainer'
 import { useIntervalTrainer } from '../hooks/useIntervalTrainer'
 import { usePitchTrainer } from '../hooks/usePitchTrainer'
+import { formatNoteName } from '../theory/notes'
 import type { GameMode, Mode } from '../types'
 
 const MODE_PROMPTS: Record<Mode, string> = {
@@ -37,6 +38,11 @@ function SessionPanel({ questionType, gameMode }: { questionType: Mode; gameMode
   const { settings, addRecord } = useAppData()
   const savedRef = useRef(false)
 
+  const formatNote = useCallback(
+    (n: string) => formatNoteName(n, settings.blackKeyMode),
+    [settings.blackKeyMode],
+  )
+
   const session =
     questionType === 'pitch'
       ? usePitchTrainer(gameMode, settings)
@@ -59,5 +65,12 @@ function SessionPanel({ questionType, gameMode }: { questionType: Mode; gameMode
     }
   }, [session.state, session.stats, session.mode, questionType, addRecord])
 
-  return <QuizLayout session={session} prompt={MODE_PROMPTS[questionType]} />
+  return (
+    <QuizLayout
+      session={session}
+      prompt={MODE_PROMPTS[questionType]}
+      renderOption={questionType === 'pitch' ? formatNote : undefined}
+      formatNote={formatNote}
+    />
+  )
 }

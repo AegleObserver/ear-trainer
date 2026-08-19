@@ -10,10 +10,17 @@ interface QuizLayoutProps {
   session: GameSession
   prompt: string
   renderOption?: (option: string) => ReactNode
+  formatNote?: (note: string) => string
   optionsGridClass?: string
 }
 
-export default function QuizLayout({ session, prompt, renderOption, optionsGridClass }: QuizLayoutProps) {
+export default function QuizLayout({
+  session,
+  prompt,
+  renderOption,
+  formatNote,
+  optionsGridClass,
+}: QuizLayoutProps) {
   const { question, lastResult } = session
 
   return (
@@ -45,6 +52,7 @@ export default function QuizLayout({ session, prompt, renderOption, optionsGridC
             result={lastResult}
             notes={question.notes}
             correctAnswer={question.correctAnswer}
+            formatNote={formatNote}
           />
         </>
       )}

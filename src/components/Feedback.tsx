@@ -5,10 +5,14 @@ interface FeedbackProps {
   result: QuizResult | null
   notes: string[]
   correctAnswer: string
+  formatNote?: (note: string) => string
 }
 
-export default function Feedback({ result, notes, correctAnswer }: FeedbackProps) {
+export default function Feedback({ result, notes, correctAnswer, formatNote }: FeedbackProps) {
   if (!result) return <div className="min-h-16" />
+
+  const fmt = formatNote ?? ((n: string) => n)
+  const shownNotes = notes.map(fmt)
 
   return (
     <div
@@ -17,9 +21,9 @@ export default function Feedback({ result, notes, correctAnswer }: FeedbackProps
       }`}
     >
       <p className={`font-medium ${result.correct ? 'text-emerald-300' : 'text-rose-300'}`}>
-        {result.correct ? '✅ 正确！' : '❌ 错误。'} 正确答案是 {correctAnswer}
+        {result.correct ? '✅ 正确！' : '❌ 错误。'} 正确答案是 {fmt(correctAnswer)}
       </p>
-      <p className="mt-1 font-mono text-sm text-slate-300">{joinNotes(notes)}</p>
+      <p className="mt-1 font-mono text-sm text-slate-300">{joinNotes(shownNotes)}</p>
     </div>
   )
 }

@@ -8,8 +8,8 @@ import {
   PLAY_ROW_H,
   PLAY_TRACK_COLORS,
 } from '../constants/playConfig'
-import { midiToNote } from '../theory/notes'
-import type { MinStep, PlayNote, PlayTrack } from '../types'
+import { midiToNote, formatNoteName } from '../theory/notes'
+import type { BlackKeyMode, MinStep, PlayNote, PlayTrack } from '../types'
 
 interface PitchGridProps {
   tracks: PlayTrack[]
@@ -18,6 +18,7 @@ interface PitchGridProps {
   minStep: MinStep
   startTick: number
   editable: boolean
+  blackKeyMode: BlackKeyMode
   onAddNote: (trackId: string, note: PlayNote) => void
   onRemoveNote: (trackId: string, note: PlayNote) => void
   onSetStartTick: (tick: number) => void
@@ -36,6 +37,7 @@ export default function PitchGrid({
   minStep,
   startTick,
   editable,
+  blackKeyMode,
   onAddNote,
   onRemoveNote,
   onSetStartTick,
@@ -145,7 +147,7 @@ export default function PitchGrid({
                 className="flex items-center justify-end pr-2 text-[10px] text-slate-400"
                 style={{ height: PLAY_ROW_H }}
               >
-                {midiToNote(p)}
+                {formatNoteName(midiToNote(p), blackKeyMode)}
               </div>
             ))}
           </div>

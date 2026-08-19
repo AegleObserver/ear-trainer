@@ -168,6 +168,7 @@ export interface GameSession {
 - 参与次数 / 平均准确率 / 当前评级 三卡片
 - 最近 10 条记录（时间·题型·玩法·答对/共答·准确率）+ 清空记录
 - 考察配置面板（根音区间/单音/音程/和弦）
+- **黑键显示方式**（radio）：升号（默认 C#D#F#G#A#）/ 降号（DbEbGbAbBb），仅影响音名展示；内部规范名始终为升号，由 `formatNoteName(note, mode)` 在展示层转换（演奏网格、调音、训练场、音感测试选项与反馈均生效）
 
 ## 训练场 (TrainingGroundPage) — ✅ 已实现
 

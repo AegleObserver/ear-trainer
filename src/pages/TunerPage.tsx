@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { playNote } from '../audio/playNotes'
+import { useAppData } from '../context/AppDataContext'
 import { useTuner } from '../hooks/useTuner'
-import { NOTE_NAMES, midiToFrequency, noteToMidi } from '../theory/notes'
+import { NOTE_NAMES, formatNoteName, midiToFrequency, noteToMidi } from '../theory/notes'
 import { GUITAR_STRINGS, UKULELE_STRINGS, type StringDef } from '../theory/tuning'
 import type { TunerMode } from '../types'
 
@@ -19,6 +20,7 @@ interface TunerPageProps {
 }
 
 export default function TunerPage({ active }: TunerPageProps) {
+  const { settings } = useAppData()
   const [mode, setMode] = useState<TunerMode>('guitar')
   const [pitchClass, setPitchClass] = useState<(typeof NOTE_NAMES)[number]>('A')
   const [octave, setOctave] = useState(4)
@@ -51,7 +53,7 @@ export default function TunerPage({ active }: TunerPageProps) {
 
   const targetLabel =
     mode === 'custom'
-      ? `${pitchClass}${octave}`
+      ? formatNoteName(`${pitchClass}${octave}`, settings.blackKeyMode)
       : targetIndex >= 0
         ? `${strings[targetIndex].name} ${strings[targetIndex].note}`
         : '—'
@@ -141,8 +143,7 @@ export default function TunerPage({ active }: TunerPageProps) {
             <div className="flex items-center gap-3">
               <span className="text-sm text-slate-400">目标音</span>
               <span className="text-4xl font-bold tracking-tight text-cyan-400">
-                {pitchClass}
-                {octave}
+                {formatNoteName(`${pitchClass}${octave}`, settings.blackKeyMode)}
               </span>
               <button
                 type="button"
@@ -189,7 +190,7 @@ export default function TunerPage({ active }: TunerPageProps) {
                   onChange={() => setPitchClass(name)}
                   className="sr-only"
                 />
-                {name}
+                {formatNoteName(name, settings.blackKeyMode)}
               </label>
             ))}
           </div>
@@ -203,7 +204,7 @@ export default function TunerPage({ active }: TunerPageProps) {
               目标 · <span className="font-semibold text-slate-200">{targetLabel}</span>
             </p>
             <p className="mt-1 text-3xl font-bold tracking-tight text-cyan-400">
-              {reading ? reading.note : '—'}
+              {reading ? formatNoteName(reading.note, settings.blackKeyMode) : '—'}
               {reading && <span className="ml-2 text-base font-normal text-slate-500">{reading.freq.toFixed(1)} Hz</span>}
             </p>
           </div>
