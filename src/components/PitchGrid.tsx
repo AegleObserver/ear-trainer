@@ -136,7 +136,7 @@ export default function PitchGrid({
   }
 
   return (
-    <section className="panel overflow-hidden">
+    <section className="panel w-full overflow-hidden">
       <div className="overflow-x-auto">
         <div className="flex min-w-max">
           <div className="sticky left-0 z-10 border-r border-slate-800 bg-slate-900">

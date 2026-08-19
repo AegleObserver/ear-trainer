@@ -70,6 +70,15 @@
 - **持久化**：`localStorage` key `'ear-trainer.manuscripts'`（`loadManuscripts` / `saveManuscripts`）；手稿内容：tracks / bpm / minStep / timeSignature + id / name / createdAt / updatedAt；`startTick` 与撤销栈不序列化
 - 脏标记：`usePlayEditor` 内 `isDirty`（音符 / 音轨 / BPM / 最小分度 / 拍号变更即置脏），保存 / 加载 / 新建后复位
 
+## 布局与响应式 — ✅ 已实现
+
+- **三栏布局**：`PlayPage` 采用 `flex` 布局，左侧音轨栏（`TrackList`，`w-56`）、中间网格（`PitchGrid`，`flex-1`）、右侧手稿栏（`ManuscriptList`，`w-56`）
+- **网格自适应**：`PitchGrid` section 加 `w-full` 占满容器，内部保持 `overflow-x-auto` 横向滚动（网格内容刚性宽度，容器窄时可横滑）
+- **响应式回流**：容器使用 `flex-wrap` + `order` 实现响应式——
+  - 大屏（`lg:`）：三栏并排（音轨 `order-1` | 网格 `order-2` | 手稿 `order-3`）
+  - 窄屏：手稿栏回流至与音轨同列（DOM 顺序：音轨→手稿→网格，视觉顺序 `order-1/2/3`，手稿落在音轨下方）
+- **最小容忍宽度**：网格容器 `min-w-[400px]`，保证网格可用宽度；低于此宽度时触发回流
+
 ## 类型与数据 — ✅ 已实现
 
 `src/types/index.ts` 新增（其余沿用既有 `RhythmVoiceId`）：

@@ -7,6 +7,7 @@ interface TrackListProps {
   tracks: PlayTrack[]
   activeTrackId: string
   locked: boolean
+  className?: string
   onSelect: (id: string) => void
   onAdd: () => void
   onRemove: (id: string) => void
@@ -18,6 +19,7 @@ export default function TrackList({
   tracks,
   activeTrackId,
   locked,
+  className = '',
   onSelect,
   onAdd,
   onRemove,
@@ -25,7 +27,7 @@ export default function TrackList({
   onToggleMuted,
 }: TrackListProps) {
   return (
-    <aside className="panel flex w-56 shrink-0 flex-col gap-2 self-start p-3">
+    <aside className={`panel flex w-56 shrink-0 flex-col gap-2 self-start p-3 ${className}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">音轨</h3>
         <button

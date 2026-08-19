@@ -116,8 +116,9 @@ export default function PlayPage() {
         onSave={handleSave}
         isDirty={editor.isDirty}
       />
-      <div className="flex items-start gap-3">
+      <div className="flex flex-wrap items-start gap-3">
         <TrackList
+          className="order-1"
           tracks={editor.tracks}
           activeTrackId={editor.activeTrackId}
           locked={editor.locked}
@@ -127,7 +128,17 @@ export default function PlayPage() {
           onSetVoice={editor.setTrackVoice}
           onToggleMuted={editor.toggleTrackMuted}
         />
-        <div className="min-w-0 flex-1">
+        <ManuscriptList
+          className="order-2 lg:order-3"
+          manuscripts={manuscripts}
+          activeManuscriptId={editor.activeManuscriptId}
+          maxCount={MANUSCRIPT_MAX_COUNT}
+          onLoad={handleLoad}
+          onRename={handleRename}
+          onDelete={handleDelete}
+          onNew={handleNew}
+        />
+        <div className="order-3 lg:order-2 min-w-[400px] flex-1">
           <PitchGrid
             tracks={editor.tracks}
             activeTrackId={editor.activeTrackId}
@@ -141,15 +152,6 @@ export default function PlayPage() {
             onSetStartTick={editor.setStartTick}
           />
         </div>
-        <ManuscriptList
-          manuscripts={manuscripts}
-          activeManuscriptId={editor.activeManuscriptId}
-          maxCount={MANUSCRIPT_MAX_COUNT}
-          onLoad={handleLoad}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onNew={handleNew}
-        />
       </div>
     </div>
   )

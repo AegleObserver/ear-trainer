@@ -19,12 +19,10 @@
 ### 4-1 演奏网格仅显示当前音轨音符 ✅ 已实现
 - 实现：`src/components/PitchGrid.tsx` 的 `notes` memo 由 `tracks.flatMap`（全部轨叠加）改为仅取 `activeTrack.notes`（按当前轨索引配色，移除多轨白边高亮）；点击判定 `noteAtCell` 本就只查当前轨，行为现已一致。
 
-### 4-2 网格自适应填充 + 最小宽度 + 布局回流
-- 现状：网格尺寸刚性（`width = totalSteps × PLAY_CELL_W`），外层仅 `overflow-x-auto`，不随容器宽度拉伸；`PlayPage` 三栏均 `w-56` 固定宽（音轨 / 网格 / 手稿），窄屏三栏并排会严重挤压。
-- 目标：
-  a) 网格面板**占满**所在容器宽度（缩小时可横向滚动或等比缩放）；
-  b) 容器存在**最小容忍宽度**，低于该宽度时「手稿」栏自动**换行至与音轨栏同一列**（两栏堆叠后手稿栏落到音轨下方或同侧）。
-- 方案要点：`PitchGrid` 改为容器宽度约束下 `width: 100%` + 内部 `overflow-x-auto`（或 CSS `scale` 适配）；`PlayPage` 布局改响应式（`flex-wrap` + `min-w-[...]` 断点，参考现有 `sm:`/`lg:` Tailwind 断点），并配合第 6 项移动端适配统一处理。
+### 4-2 网格自适应填充 + 最小宽度 + 布局回流 ✅ 已实现
+- 实现：
+  - a) `PitchGrid` section 加 `w-full` 占满容器，内部保持 `overflow-x-auto` 横向滚动；
+  - b) `PlayPage` 布局改 `flex-wrap` + `order` 响应式：大屏三栏（音轨 | 网格 | 手稿），窄屏手稿栏回流至与音轨同列（DOM 顺序：音轨→手稿→网格，视觉顺序大屏 `order-1/3/2`，小屏 `order-1/2/3`）；网格容器 `min-w-[400px]` 保证最小容忍宽度。
 
 ## 5. 交互体验优化
 ### 5-1 调音麦克风检测测试
