@@ -28,4 +28,6 @@ export const PLAY_TRACK_COLORS = ['bg-cyan-400', 'bg-emerald-400', 'bg-violet-40
 
 export const MANUSCRIPT_MAX_COUNT = 10
 
-export const MANUSCRIPT_DEFAULT_NAME = '未命名手稿'
+export const MANUSCRIPT_NAME_PREFIX = '新建手稿'
+
+export const PLAY_PREVIEW_MIDI = 69 // A4，音色试听默认音高

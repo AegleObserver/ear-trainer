@@ -1,3 +1,4 @@
+import { MANUSCRIPT_NAME_PREFIX } from '../constants/playConfig'
 import type {
   Manuscript,
   PlaybackMode,
@@ -128,6 +129,20 @@ export function saveManuscripts(manuscripts: Manuscript[]): void {
   } catch {
     // ignore
   }
+}
+
+/**
+ * 生成下一个手稿默认名「新建手稿-x」：x 取现有手稿名中
+ * 「新建手稿 / 新建手稿-N」的最大序号 + 1，保证不重号。
+ */
+export function nextManuscriptName(manuscripts: Manuscript[]): string {
+  const pattern = new RegExp(`^${MANUSCRIPT_NAME_PREFIX}(?:-(\\d+))?$`)
+  let max = 0
+  for (const m of manuscripts) {
+    const match = pattern.exec(m.name)
+    if (match) max = Math.max(max, match[1] ? Number(match[1]) : 0)
+  }
+  return `${MANUSCRIPT_NAME_PREFIX}-${max + 1}`
 }
 
 export interface RatingInfo {

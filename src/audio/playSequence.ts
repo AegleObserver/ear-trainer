@@ -4,6 +4,8 @@ import type { MinStep, PlayTrack, RhythmVoiceId } from '../types'
 
 const DURATION_FACTOR = 0.95
 
+const PREVIEW_DURATION = 0.3
+
 const voiceCache = new Map<RhythmVoiceId, Tone.PolySynth | Tone.MembraneSynth>()
 
 function getVoiceSynth(voice: RhythmVoiceId): Tone.PolySynth | Tone.MembraneSynth {
@@ -40,6 +42,18 @@ export interface PlaybackHandle {
   resume: () => void
   stop: () => void
   promise: Promise<void>
+}
+
+/**
+ * 编辑即时试听：复用演奏音色池的独立实例，播一记短音
+ * （鼓敲 C1；乐音按 MIDI 音高发声），用于建音符 / 音色预览反馈。
+ */
+export function previewPlayNote(voice: RhythmVoiceId, pitch: number): void {
+  void ensureAudio().then(() => {
+    const synth = getVoiceSynth(voice)
+    const note = voice === 'drum' ? 'C1' : Tone.Frequency(pitch, 'midi').toNote()
+    synth.triggerAttackRelease(note, PREVIEW_DURATION)
+  })
 }
 
 export interface PlaySequenceOptions {

@@ -3,8 +3,8 @@ import ManuscriptList from '../components/ManuscriptList'
 import PitchGrid from '../components/PitchGrid'
 import PlayStatusBar from '../components/PlayStatusBar'
 import TrackList from '../components/TrackList'
-import { MANUSCRIPT_DEFAULT_NAME, MANUSCRIPT_MAX_COUNT } from '../constants/playConfig'
-import { loadManuscripts, saveManuscripts } from '../data/storage'
+import { MANUSCRIPT_MAX_COUNT } from '../constants/playConfig'
+import { loadManuscripts, nextManuscriptName, saveManuscripts } from '../data/storage'
 import usePlayEditor from '../hooks/usePlayEditor'
 import type { Manuscript } from '../types'
 
@@ -42,7 +42,7 @@ export default function PlayPage() {
     } else {
       const m: Manuscript = {
         id: newManuscriptId(),
-        name: MANUSCRIPT_DEFAULT_NAME,
+        name: nextManuscriptName(manuscripts),
         ...state,
         createdAt: now,
         updatedAt: now,

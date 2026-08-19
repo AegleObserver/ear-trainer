@@ -1,5 +1,6 @@
-import { PLAY_TRACK_COLORS } from '../constants/playConfig'
+import { PLAY_PREVIEW_MIDI, PLAY_TRACK_COLORS } from '../constants/playConfig'
 import { RHYTHM_VOICES } from '../data/storage'
+import { previewPlayNote } from '../audio/playSequence'
 import type { PlayTrack, RhythmVoiceId } from '../types'
 
 interface TrackListProps {
@@ -53,8 +54,15 @@ export default function TrackList({
               } ${locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <div className="flex items-center gap-2">
-                <span
-                  className={`inline-block h-3 w-3 shrink-0 rounded-full ${PLAY_TRACK_COLORS[index % PLAY_TRACK_COLORS.length]}`}
+                <button
+                  type="button"
+                  title={`试听音色（A4）· ${RHYTHM_VOICES[track.voice].label}`}
+                  disabled={locked}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    previewPlayNote(track.voice, PLAY_PREVIEW_MIDI)
+                  }}
+                  className={`inline-block h-3 w-3 shrink-0 cursor-pointer rounded-full transition-shadow hover:ring-2 hover:ring-white/60 disabled:cursor-not-allowed disabled:opacity-40 ${PLAY_TRACK_COLORS[index % PLAY_TRACK_COLORS.length]}`}
                 />
                 <span className="flex-1 text-sm font-medium">音轨 {index + 1}</span>
                 <button

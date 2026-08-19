@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { previewPlayNote } from '../audio/playSequence'
 import {
   PLAY_BAR_COUNT,
   PLAY_CELL_W,
@@ -126,6 +127,7 @@ export default function PitchGrid({
   const handlePointerUp = () => {
     if (!editable || !drag) return
     onAddNote(activeTrackId, { pitch: drag.pitch, start: drag.start, dur: drag.end - drag.start + 1 })
+    previewPlayNote(activeTrack.voice, drag.pitch)
     setDrag(null)
   }
 
