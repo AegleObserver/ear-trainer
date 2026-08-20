@@ -3,7 +3,13 @@ import ManuscriptList from '../components/ManuscriptList'
 import PitchGrid from '../components/PitchGrid'
 import PlayStatusBar from '../components/PlayStatusBar'
 import TrackList from '../components/TrackList'
-import { MANUSCRIPT_MAX_COUNT, PLAY_BAR_COUNT, PLAY_CELL_W } from '../constants/playConfig'
+import {
+  MANUSCRIPT_MAX_COUNT,
+  PLAY_BAR_COUNT,
+  PLAY_BPM_DEFAULT,
+  PLAY_CELL_W,
+  PLAY_MIN_STEP_DEFAULT,
+} from '../constants/playConfig'
 import { useAppData } from '../context/AppDataContext'
 import { loadManuscripts, nextManuscriptName, saveManuscripts } from '../data/storage'
 import usePlayEditor from '../hooks/usePlayEditor'
@@ -105,8 +111,24 @@ export default function PlayPage() {
 
   const handleNew = useCallback(() => {
     if (editor.isDirty && !window.confirm('当前修改未保存，仍要新建空白手稿吗？')) return
-    editor.resetEditor()
-  }, [editor])
+    if (manuscripts.length >= MANUSCRIPT_MAX_COUNT) {
+      window.alert(`手稿数量已达上限（${MANUSCRIPT_MAX_COUNT} 条），请先删除部分手稿`)
+      return
+    }
+    const now = Date.now()
+    const m: Manuscript = {
+      id: newManuscriptId(),
+      name: nextManuscriptName(manuscripts),
+      tracks: [{ id: 'track-1', voice: 'triangle', muted: false, notes: [] }],
+      bpm: PLAY_BPM_DEFAULT,
+      minStep: PLAY_MIN_STEP_DEFAULT,
+      timeSignature: '4/4',
+      createdAt: now,
+      updatedAt: now,
+    }
+    setManuscripts((prev) => [...prev, m])
+    editor.loadManuscript(m)
+  }, [editor, manuscripts])
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6">

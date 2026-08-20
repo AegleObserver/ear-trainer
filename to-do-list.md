@@ -41,3 +41,6 @@
 - 现状：部分页面已有基础响应式（`AppShell` Tab 内边距、`TunerPage` 网格 `sm:grid-cols-6`），但 `PlayPage` 三栏固定宽（见 4-2）、网格交互依赖 `pointer` 拖拽（触屏需 `touch-none` 已加）。
 - 目标：整体移动端适配。
 - 方案要点：优先处理演奏页布局回流（4-2）；核查触屏拖拽/点击精度、参考音与播放的移动端自动播放限制、麦克风权限在移动浏览器（HTTPS + 安全上下文）的提示引导；建议以「演奏页 → 调音页 → 全局」顺序推进。
+
+## 7. 新建手稿即时上屏 ✅ 已实现
+- 现状：`PlayPage.handleNew`（`src/pages/PlayPage.tsx`）点击「新建手稿」即生成 `Manuscript` 条目（id 走 `newManuscriptId`、默认名走 `nextManuscriptName`）写入 `manuscripts` 状态并 `editor.loadManuscript` 置为当前激活高亮，UI 即时反馈；持久化仍延迟到保存时统一 `saveManuscripts`（新建分支置上限检查在 `handleNew` 前置，`handleSave` 保留无激活条目时的兜底新建）。
