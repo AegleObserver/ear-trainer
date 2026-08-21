@@ -70,8 +70,7 @@ export default function TunerPage({ active }: TunerPageProps) {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">调音</h2>
+      <div className="flex items-center justify-end">
         <div className="flex rounded-lg border border-slate-700 p-0.5">
           {MODES.map((m) => (
             <button

@@ -5,10 +5,15 @@
 ## 1. 手稿默认命名 ✅ 已实现
 - 现状：`src/constants/playConfig.ts` 中 `MANUSCRIPT_NAME_PREFIX = '新建手稿'`；`src/data/storage.ts` 的 `nextManuscriptName(manuscripts)` 取现有「新建手稿 / 新建手稿-N」最大序号 + 1，`PlayPage.handleSave` 新建条目时使用，保证默认名不重号。
 
-## 2. Tab 界面合并
+## 2. Tab 界面合并 ✅ 已实现
 - 现状：`src/components/AppShell.tsx` `PAGES` 共 6 个 Tab：测试 / 训练场 / 调音 / 演奏 / 个人中心 / 设置（全部已启用）。
 - 目标：将「训练场 / 调音 / 演奏」合并为一个 Tab「大厅」，底部 Tab 缩减为 4 个（测试 / 大厅 / 个人中心 / 设置）。
 - 方案要点：需设计「大厅」页内子导航（三段式区块或页内切换），三页均为常驻挂载（沿用 hidden 显隐约定）；涉及 `PageDef` 结构、路由（`App.tsx`）、TunerPage 的 `active` prop 驱动、PlayPage 布局等联动改造，属较大重构，建议单独里程碑。
+- 实现：
+  - `PageId` 改为 `'test' | 'hall' | 'profile' | 'settings'`，新增 `HallSectionId = 'training' | 'tuner' | 'play'`（`src/types/index.ts`）。
+  - 新增 `src/pages/HallPage.tsx`：`active` prop 由 AppShell 传入（= 大厅 Tab 激活）；页首「大厅」+ 分段子导航（训练场 / 调音 / 演奏），三段 `useState<HallSectionId>` 不持久化、`hidden` 常驻挂载；`TunerPage` 的 `active` 由 `active && section === 'tuner'` 驱动，切走大厅或切其他段即停麦。
+  - `AppShell.tsx`：`PAGES` 缩减为 4 个（测试 / 大厅 / 个人中心 / 设置），原训练场/调音/演奏三个标签页内容并入 `HallPage`。
+  - 三个子页面头部独立标题（训练场/调音/演奏）移除，避免与「大厅 + 分段切换」重复；各自内部模式切换（音高/节奏、乐器）保留于内容区右上角。
 
 ## 3. 网站命名
 - 现状：Header 标题「Ear Trainer」，副标题「音感训练」；名称仅覆盖音感训练，未覆盖「调音 / 演奏」业务。

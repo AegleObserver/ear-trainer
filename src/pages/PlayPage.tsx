@@ -132,7 +132,6 @@ export default function PlayPage() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6">
-      <h2 className="text-xl font-bold">演奏</h2>
       <p className="text-sm text-slate-400">
         步进网格编辑器：纵轴 = 音高、横轴 = 时间（{editor.timeSignature} 拍，默认 120 BPM，最小分度 1/8 / 1/16）。点击网格顶部小节可设置播放起点；左侧音轨栏可切换 / 新增 / 删除音轨并独立配置音色与静音；右侧手稿栏可保存 / 加载 / 重命名 / 删除创作。
       </p>

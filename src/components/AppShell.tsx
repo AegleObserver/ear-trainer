@@ -4,17 +4,13 @@ import ReferenceToneButton from '../components/ReferenceToneButton'
 import { useAppData } from '../context/AppDataContext'
 import type { PageDef, PageId } from '../types'
 import TestPage from '../pages/TestPage'
-import TrainingGroundPage from '../pages/TrainingGroundPage'
-import TunerPage from '../pages/TunerPage'
-import PlayPage from '../pages/PlayPage'
+import HallPage from '../pages/HallPage'
 import ProfilePage from '../pages/ProfilePage'
 import SettingsPage from '../pages/SettingsPage'
 
 const PAGES: PageDef[] = [
   { id: 'test', label: '测试', icon: '🎧', enabled: true },
-  { id: 'training', label: '训练场', icon: '🎼', enabled: true },
-  { id: 'tuner', label: '调音', icon: '🎚️', enabled: true },
-  { id: 'play', label: '演奏', icon: '🎹', enabled: true },
+  { id: 'hall', label: '大厅', icon: '🎶', enabled: true },
   { id: 'profile', label: '个人中心', icon: '👤', enabled: true },
   { id: 'settings', label: '设置', icon: '⚙️', enabled: true },
 ]
@@ -102,14 +98,8 @@ export default function AppShell({ activePage, onNavigate }: AppShellProps) {
         <div className={activePage === 'test' ? '' : 'hidden'}>
           <TestPage />
         </div>
-        <div className={activePage === 'training' ? '' : 'hidden'}>
-          <TrainingGroundPage />
-        </div>
-        <div className={activePage === 'tuner' ? '' : 'hidden'}>
-          <TunerPage active={activePage === 'tuner'} />
-        </div>
-        <div className={activePage === 'play' ? '' : 'hidden'}>
-          <PlayPage />
+        <div className={activePage === 'hall' ? '' : 'hidden'}>
+          <HallPage active={activePage === 'hall'} />
         </div>
         <div className={activePage === 'profile' ? '' : 'hidden'}>
           <ProfilePage />

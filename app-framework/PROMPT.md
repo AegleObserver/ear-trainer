@@ -128,3 +128,9 @@ export function getSynth(): Tone.Synth {
 - [ ] `npm run build` 成功
 - [ ] 控制台无 Tone.js 报错
 - [ ] 暗色主题视觉效果正常
+
+## ✅ 已实现 / 设计决策
+
+- ✅ Tab 界面合并：底部 Tab 由 6 个（测试/训练场/调音/演奏/个人中心/设置）缩减为 4 个（测试/大厅/个人中心/设置）；新增 `HallPage` 承载大厅页内子导航「训练场 / 调音 / 演奏」，三段沿用 `hidden` 常驻挂载约定（`HallSectionId` 状态不持久化）。`PageId` 相应改为 `'test' | 'hall' | 'profile' | 'settings'`。
+- ✅ TunerPage 的 `active` prop 改由「大厅 Tab 激活 && 当前段为调音」驱动（`HallPage` 接收 AppShell 的 `active` 再与段状态求与），保证切走大厅或切到其他段时自动停止麦克风。
+- ✅ 三个子页面的独立标题（训练场/调音/演奏）已移除，页首统一为「大厅 + 分段切换」；训练场/调音的内部模式切换（音高节奏 / 乐器）保留在各自内容区右上角。

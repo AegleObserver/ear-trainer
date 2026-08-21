@@ -93,8 +93,7 @@ export default function TrainingGroundPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">训练场</h2>
+      <div className="flex items-center justify-end">
         <SoundDomainToggle domain={domain} onChange={setDomain} />
       </div>
 

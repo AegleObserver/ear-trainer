@@ -1,4 +1,6 @@
-export type PageId = 'test' | 'training' | 'tuner' | 'play' | 'settings' | 'profile'
+export type PageId = 'test' | 'hall' | 'profile' | 'settings'
+
+export type HallSectionId = 'training' | 'tuner' | 'play'
 
 export type SoundDomain = 'pitch' | 'rhythm'
 

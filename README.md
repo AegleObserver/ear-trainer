@@ -4,23 +4,25 @@
 
 ## 给贡献者的一句话速览
 
-> 底部 5 个 Tab 页面**全部常驻挂载**、以 `hidden` 类显隐——切 Tab 不卸载组件，页面状态（测试进度、训练场勾选、节奏拼接图案等）切回即保留。这是本项目最重要的架构约定，改 `AppShell` 时务必保持。
+> 底部 4 个 Tab 页面**全部常驻挂载**、以 `hidden` 类显隐——切 Tab 不卸载组件，页面状态（测试进度、大厅子区块、训练场勾选、节奏拼接图案等）切回即保留。大厅页内部同样以 `hidden` 常驻挂载训练场/调音/演奏三段。这是本项目最重要的架构约定，改 `AppShell` 或 `HallPage` 时务必保持。
 
 ### 核心架构
 
 ```
 App (activePage state)
 └─ AppDataProvider          # settings/records 全局状态（localStorage 持久化）
-   └─ AppShell              # Header + 常驻挂载的 5 个页面(hidden 显隐) + 底部 Tab
+   └─ AppShell              # Header + 常驻挂载的 4 个页面(hidden 显隐) + 底部 Tab
       ├─ TestPage           # 测试：音高域 EarTrainingPage / 节奏域 RhythmTestPage
-      ├─ TrainingGroundPage # 训练场：音高域 / 节奏域 RhythmGroundPage
-      ├─ TunerPage          # 调音：吉他 / 尤克里里 / 自定义音（麦克风测音）
-      ├─ PlayPage           # 演奏：网格编辑器+播放（3/4 拍、缩放、导出规划中）
+      ├─ HallPage           # 大厅：页内子导航常驻挂载训练场/调音/演奏三段
+      │   ├─ TrainingGroundPage # 训练场：音高域 / 节奏域 RhythmGroundPage
+      │   ├─ TunerPage      # 调音：吉他 / 尤克里里 / 自定义音（麦克风测音）
+      │   └─ PlayPage       # 演奏：网格编辑器+播放（3/4 拍、缩放、导出规划中）
       ├─ ProfilePage        # 个人中心：记录/评级/考察配置
       └─ SettingsPage       # 设置：主题/音色/播放方式/测试参数/节奏音色+BPM
 ```
 
 - **双域模块**：测试与训练场内部用右上角 `SoundDomainToggle` 在「音高 🎵 / 节奏 🥁」两个子功能间切换，每页独立 `useState<SoundDomain>`、不持久化。
+- **大厅子导航**：`HallPage` 顶部「训练场 / 调音 / 演奏」分段切换（`useState<HallSectionId>`、不持久化），三段常驻挂载；`TunerPage` 的 `active` prop 由「大厅 Tab 激活 && 当前段为调音」驱动，离开即停麦克风。
 - **音频引擎**：`src/audio/engine.ts` 是唯一的音频入口（合成器/打击乐单例、音量、音色、播放方式配置），播放函数在 `playNotes.ts` 与 `rhythmPlay.ts`。Tone.js 要求先手势解锁——`ensureAudio()` 在每次用户点击时调用。
 - **会话引擎**：`useGameSession` 是标准/限时/无限三种玩法的统一出题-判题-切题-结算引擎；`usePitchTrainer / useIntervalTrainer / useChordTrainer / useRhythmTrainer` 各自提供 `createQuestion + playQuestion`。
 - **状态与持久化**：设置与最近记录存 `localStorage`，由 `AppDataContext` 统一读写；设置旧数据用 `{...DEFAULT, ...raw}` 合并自动补默认值（新增设置项时沿用此模式）。
